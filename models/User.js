@@ -3,6 +3,7 @@ import bcrypt from "bcrypt";
 import Joi, { boolean } from "joi";
 import JWT from "jsonwebtoken";
 import dotenv from "dotenv";
+import transporter from "../config/emailConfig";
 
 dotenv.config();
 
@@ -65,12 +66,30 @@ userSchema.methods.comparePassword = function (candidatePassword, next) {
 };
 
 userSchema.methods.generateAccessToken = function () {
-  console.log(this.email, this.active);
   const payload = { _id: this._id, email: this.email, active: this.active };
   const token = JWT.sign({ payload: payload }, process.env.SECRET_TOKEN, {
     expiresIn: 3600,
   });
   return token;
+};
+
+userSchema.methods.sendConfirmEmail = function (data, next) {
+  const confirmEmail = {
+    from: process.env.EMAIL,
+    to: this.email,
+    subject: "Activate",
+    html: data,
+  };
+  transporter.sendMail(confirmEmail, (error, info) => {
+    if (error) {
+      next(null, false);
+    }
+    return next(null, info);
+  });
+};
+
+userSchema.methods.verifyEmail = function (token) {
+  JWT.verify(token, process.env.SECRET_TOKEN);
 };
 
 export default mongoose.model("User", userSchema);

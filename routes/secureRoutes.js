@@ -9,10 +9,9 @@ import User from "../models/User";
 //Displays information tailored according to the logged in user
 router.get("/", (req, res) => {
   // //We'll just send back the user details and the token
-  // User.findOne({ email: req.user.email }, (err, user) => {
-  //     res.send(user.imgUrl)
-  // })
-  res.send("This is profile");
+  User.findOne({ email: req.user.email }, (err, user) => {
+    res.send(user);
+  });
 });
 
 // MULTER
@@ -53,6 +52,42 @@ router.post("/upload", (req, res, next) => {
       });
     });
   });
+});
+
+router.post("/run", (req, res, next) => {
+  const fileName = "code.c";
+  const writeStream = fs.createWriteStream(fileName);
+  // Get code from the client and write to a file
+  writeStream.write(req.body.code);
+  writeStream.end();
+  // Build created code file and make it runnable
+  const child = execFile(
+    "gcc",
+    [fileName, "-o", "code"],
+    (error, stdout, stderr) => {
+      if (error) {
+        throw error;
+      }
+      console.log(stdout);
+
+      // Run code.exe and send the result to the client
+      const child = execFile("./code", (error, stdout, stderr) => {
+        if (error) {
+          throw error;
+        }
+        const result = stdout;
+        // Delete 2 code files in the server after send
+        try {
+          fs.unlinkSync("./code.exe");
+          fs.unlinkSync("./code.c");
+          //file removed
+        } catch (err) {
+          console.error(err);
+        }
+        res.send(result);
+      });
+    }
+  );
 });
 
 export default router;

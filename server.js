@@ -1,6 +1,4 @@
 import express from "express";
-import socket from "socket.io";
-import http from "http";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
@@ -19,7 +17,7 @@ const PORT = process.env.PORT;
 const DB_CONNECTION = process.env.MONGODB_PORT;
 const ATLAS_URL = process.env.ATLAS_URL;
 const app = express();
-// const server = http.createServer(app)
+
 // export const io = socket(server)
 
 // DB config
@@ -43,6 +41,7 @@ app.use(
 app.use(cors());
 app.use(morgan("combined"));
 app.use(helmet());
+app.set("views", __dirname + "/public");
 
 // // Web Socket
 // io.on('connection', (socket) => {
