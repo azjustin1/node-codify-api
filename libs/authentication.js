@@ -75,10 +75,10 @@ passport.use(
           }
 
           const confirmToken = await JWT.sign(
-            { active: true },
+            { email, active: true },
             process.env.SECRET_TOKEN,
             {
-              expiresIn: 60,
+              expiresIn: 300,
             }
           );
 
@@ -144,6 +144,9 @@ passport.use(
             if (!isMatch) {
               return done(null, false, { message: "Wrong email or password" });
             }
+            if (!user.active)
+              return done(null, false, { message: "Your account is inactive" });
+
             const accessToken = user.generateAccessToken();
 
             return done(null, user, { accessToken: accessToken });

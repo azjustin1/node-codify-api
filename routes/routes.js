@@ -7,6 +7,9 @@ import transporter from "../config/emailConfig";
 //This is custom passport
 import authRouter from "../libs/authentication";
 
+// Models
+import User from "../models/User";
+
 dotenv.config();
 
 const router = express.Router();
@@ -54,7 +57,12 @@ router.post("/signin", (req, res, next) => {
 // Activate account after confirmed email
 router.get("/activate/:activateToken", (req, res) => {
   const decode = JWT.verify(req.params.activateToken, process.env.SECRET_TOKEN);
-  res.send(decode.active);
+  User.findOne({ email: decode.email }, (err, user) => {
+    if (err) return res.status(401);
+    user.active = decode.active;
+    user.save();
+    res.status(200).send("Your account has been activated successfully");
+  });
 });
 
 export default router;

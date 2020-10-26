@@ -92,4 +92,8 @@ userSchema.methods.verifyEmail = function (token) {
   JWT.verify(token, process.env.SECRET_TOKEN);
 };
 
+userSchema.methods.checkActive = function () {
+  return this.active;
+};
+
 export default mongoose.model("User", userSchema);
