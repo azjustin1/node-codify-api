@@ -1,4 +1,4 @@
-import express, { response } from "express";
+import express from "express";
 import passport from "passport";
 import passportLocal from "passport-local";
 import passportJwt, { ExtractJwt } from "passport-jwt";
@@ -15,8 +15,9 @@ dotenv.config();
 const JwtStrategy = passportJwt.Strategy;
 const LocalStrategy = passportLocal.Strategy;
 
-// This verify that the token sent by the user is valid
+// Authenticate user
 passport.use(
+  "jwt",
   new JwtStrategy(
     {
       secretOrKey: process.env.SECRET_TOKEN,
@@ -27,6 +28,30 @@ passport.use(
         // Check if user is inactive
         if (!accessToken.payload.active) {
           return done(null, false, { message: "Your are inactive" });
+        }
+        return done(null, accessToken.payload);
+      } catch (err) {
+        return done(err);
+      }
+    }
+  )
+);
+
+// This is role based handler
+passport.use(
+  "authorization",
+  new JwtStrategy(
+    {
+      secretOrKey: process.env.SECRET_TOKEN,
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("Authorization"),
+    },
+    async (accessToken, done) => {
+      try {
+        // Check if user is inactive
+        if (accessToken.payload.role !== "ADMIN") {
+          return done(null, false, {
+            message: "Your are not authorized to access this page",
+          });
         }
         return done(null, accessToken.payload);
       } catch (err) {
@@ -74,6 +99,7 @@ passport.use(
             });
           }
 
+          // This token contain account activation information
           const confirmToken = await JWT.sign(
             { email, active: true },
             process.env.SECRET_TOKEN,
@@ -81,14 +107,14 @@ passport.use(
               expiresIn: 300,
             }
           );
-
+          // Email template
           const confirmEmail = await ejs.renderFile("public/activate.ejs", {
             subject: "Activate your account",
             domain: req.headers.host,
             confirmToken: confirmToken,
           });
 
-          // Send confirm email
+          // Send confirm email to user to verify
           user.sendConfirmEmail(confirmEmail, (error, info) => {
             if (error) {
               return done(null, false, { message: info });
@@ -125,21 +151,13 @@ passport.use(
           });
         }
 
-        //Find the user associated with the email provided by the user
-        const user = await User.findOne({ email: email });
-        if (!user) {
-          //If the user isn't found in the database, return a message
-          return done(null, false, { message: "User not found" });
-        }
-
-        //If the passwords match, it returns a value of true.
+        // If the input is valid
         await User.findOne({ email: email }, async (err, user) => {
           if (err) return done(null, false, { message: "User not found" });
           //Validate password and make sure it matches with the corresponding hash stored in the database
           await user.comparePassword(password, (err, isMatch) => {
-            console.log(isMatch);
             if (err) {
-              return done(null, false, { message: "Wrong email or password" });
+              return done(null, false, { message: err.message });
             }
             if (!isMatch) {
               return done(null, false, { message: "Wrong email or password" });
@@ -147,8 +165,8 @@ passport.use(
             if (!user.active)
               return done(null, false, { message: "Your account is inactive" });
 
+            // Generate access token and send back to client
             const accessToken = user.generateAccessToken();
-
             return done(null, user, { accessToken: accessToken });
           });
         });

@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import bcrypt from "bcrypt";
-import Joi, { boolean } from "joi";
+import Joi from "joi";
 import JWT from "jsonwebtoken";
 import dotenv from "dotenv";
 import transporter from "../config/emailConfig";
@@ -25,6 +25,9 @@ const userSchema = new Schema({
   active: {
     type: Boolean,
     default: false,
+  },
+  role: {
+    type: String,
   },
 });
 
@@ -54,9 +57,8 @@ userSchema.methods.Validate = function (obj) {
   return validation;
 };
 
-userSchema.methods.comparePassword = function (candidatePassword, next) {
-  const password = this.password;
-  bcrypt.compare(candidatePassword, password, function (err, isMatch) {
+userSchema.methods.comparePassword = function (confirmPassword, next) {
+  bcrypt.compare(confirmPassword, this.password, function (err, isMatch) {
     if (err) {
       console.log("Wrong password");
       next(null, false);
@@ -66,7 +68,12 @@ userSchema.methods.comparePassword = function (candidatePassword, next) {
 };
 
 userSchema.methods.generateAccessToken = function () {
-  const payload = { _id: this._id, email: this.email, active: this.active };
+  // This contain user information to authenticate
+  const payload = {
+    email: this.email,
+    active: this.active,
+    role: this.role,
+  };
   const token = JWT.sign({ payload: payload }, process.env.SECRET_TOKEN, {
     expiresIn: 3600,
   });
@@ -90,10 +97,6 @@ userSchema.methods.sendConfirmEmail = function (data, next) {
 
 userSchema.methods.verifyEmail = function (token) {
   JWT.verify(token, process.env.SECRET_TOKEN);
-};
-
-userSchema.methods.checkActive = function () {
-  return this.active;
 };
 
 export default mongoose.model("User", userSchema);
