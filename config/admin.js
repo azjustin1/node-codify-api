@@ -11,6 +11,7 @@ import User from "../models/User";
 import passport from "passport";
 
 const AdminBroOptions = {
+  // THis is new change
   resources: [
     {
       resource: User,
