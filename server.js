@@ -1,11 +1,11 @@
 import express from "express";
-import session from "express-session";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import bodyParser from "body-parser";
+import cookieParser from "cookie-parser";
+import session from "express-session";
 import morgan from "morgan";
-// import helmet from "helmet";
 import passport from "passport";
 
 // // API server config
@@ -17,17 +17,12 @@ const ATLAS_URL = process.env.ATLAS_URL;
 const app = express();
 app.use(passport.initialize());
 
-// // Middleware
-app.use(bodyParser.json());
-
-app.use(
-  bodyParser.urlencoded({
-    extended: true,
-  })
-);
+// Middleware
+app.use(express.json());
+app.use(cookieParser());
+app.use(session({ secret: process.env.SECRET_STRING }));
 app.use(cors());
 app.use(morgan("tiny"));
-// app.use(helmet());
 app.set("views", __dirname + "/public");
 
 // Routes
@@ -43,6 +38,14 @@ app.use(
   secureRoutes
 );
 app.use(adminBro.options.rootPath, adminRouter);
+
+import bcrypt, { genSalt } from "bcrypt";
+
+app.get("/hash", async (req, res) => {
+  const salt = await bcrypt.genSalt(10);
+  const hash = await bcrypt.hash("123123", salt);
+  res.send(hash);
+});
 
 const runServer = async () => {
   // DB config

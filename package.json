@@ -15,11 +15,14 @@
   "dependencies": {
     "@admin-bro/express": "^3.0.1",
     "@admin-bro/mongoose": "^1.1.0",
+    "@admin-bro/passwords": "^1.0.3",
     "admin-bro": "^3.3.1",
+    "argon2": "^0.27.0",
     "bcrypt": "^5.0.0",
     "body-parser": "^1.19.0",
     "cloudinary": "^1.23.0",
     "connect-flash": "^0.1.1",
+    "cookie-parser": "^1.4.5",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
     "eiows": "^3.3.2",
@@ -41,6 +44,7 @@
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
+    "react": "^17.0.1",
     "socket.io": "^2.3.0",
     "winston": "^3.3.3"
   }

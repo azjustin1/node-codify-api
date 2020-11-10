@@ -28,6 +28,7 @@ const userSchema = new Schema({
   },
   role: {
     type: String,
+    enum: ["admin", "user"],
   },
 });
 
@@ -36,9 +37,18 @@ userSchema.pre("save", function (next) {
   if (!this.isModified("password")) {
     return next();
   }
+  // This is for new user from admin
+  if (this.password !== null) {
+    console.log("user already have hash password");
+    return next();
+  }
+
   // Hash the password before save user
   bcrypt.genSalt(10, async (err, salt) => {
-    if (err) return next(err);
+    if (err) {
+      console.log(err);
+      return next(err);
+    }
     bcrypt.hash(this.password, salt, (err, hash) => {
       if (err) return next(err);
       this.password = hash;
@@ -60,7 +70,6 @@ userSchema.methods.Validate = function (obj) {
 userSchema.methods.comparePassword = function (confirmPassword, next) {
   bcrypt.compare(confirmPassword, this.password, function (err, isMatch) {
     if (err) {
-      console.log("Wrong password");
       next(null, false);
     }
     return next(null, isMatch);

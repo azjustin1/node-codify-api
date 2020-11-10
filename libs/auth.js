@@ -73,7 +73,6 @@ passport.use(
     async (req, email, password, done) => {
       // Check confirm password
       if (req.body.password != req.body.confirmPassword) {
-        console.log("Not match");
         return done(null, false, {
           message: "Password and confirm password does not match",
         });
@@ -87,6 +86,7 @@ passport.use(
         // Validate user input
         const validation = await user.Validate(newUser);
         if (validation.error) {
+          console.log(validation.error);
           return done(null, false, {
             message: validation.error.details[0].message,
           });
@@ -94,8 +94,9 @@ passport.use(
 
         user.save(async (error, user) => {
           if (error) {
+            console.log(error);
             return done(null, false, {
-              message: "Email has already been registered",
+              message: error.message,
             });
           }
 
