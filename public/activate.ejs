@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        * {
+            margin: 0;
+            
+        }
+        
+        a {
+            text-decoration: none;
+            color: white
+        }
+
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .confirmation {
+          
+            background-color: grey;
+            padding: 15px;
+        }   
+
+        .confirmation__title {
+            color: white;
+            margin: auto;
+        }
+
+        .confirmation__button {
+            padding: 10px;
+            
+            background-color: teal;
+            text-align: center;
+            border-radius: 50px;
+            width: 200px;
+            justify-self: center;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="confirmation">
+            <div class="confirmation__title">
+                <h1><%= subject %></h1>
+                <!-- <h1>Verify your email address</h1> -->
+            </div>
+            <div class="confirmation__button">
+                <a style="height: 200px; width: 200px; background-color: teal;" href="http://<%= domain%>/activate/<%=confirmToken%>">Verify Email Address</a>
+            </div>
+        </div>  
+    </div>
+</body>
+</html>
