@@ -26,9 +26,16 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
+  attended: [
+    {
+      type: Schema.Types.ObjectId,
+      ref: "Classroom",
+    },
+  ],
   role: {
     type: String,
-    enum: ["admin", "user"],
+    enum: ["admin", "student", "teacher"],
+    default: "student",
   },
 });
 
@@ -37,11 +44,11 @@ userSchema.pre("save", function (next) {
   if (!this.isModified("password")) {
     return next();
   }
-  // This is for new user from admin
-  if (this.password !== null) {
-    console.log("user already have hash password");
-    return next();
-  }
+  // // This is for new user from admin
+  // if (this.password !== null) {
+  //   console.log("user already have hash password");
+  //   return next();
+  // }
 
   // Hash the password before save user
   bcrypt.genSalt(10, async (err, salt) => {
@@ -77,8 +84,10 @@ userSchema.methods.comparePassword = function (confirmPassword, next) {
 };
 
 userSchema.methods.generateAccessToken = function () {
+  console.log(this._id);
   // This contain user information to authenticate
   const payload = {
+    id: this._id,
     email: this.email,
     active: this.active,
     role: this.role,

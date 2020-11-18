@@ -15,6 +15,14 @@ dotenv.config();
 const JwtStrategy = passportJwt.Strategy;
 const LocalStrategy = passportLocal.Strategy;
 
+passport.serializeUser(function (user, done) {
+  done(null, user);
+});
+
+passport.deserializeUser(function (user, done) {
+  done(null, user);
+});
+
 // Authenticate user
 passport.use(
   "jwt",
@@ -24,6 +32,7 @@ passport.use(
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("Authorization"),
     },
     async (accessToken, done) => {
+      console.log("Jwt authenticate");
       try {
         // Check if user is inactive
         if (!accessToken.payload.active) {
@@ -37,15 +46,39 @@ passport.use(
   )
 );
 
-// This is role based handler
 passport.use(
-  "authorization",
+  "teacher",
   new JwtStrategy(
     {
       secretOrKey: process.env.SECRET_TOKEN,
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("Authorization"),
     },
     async (accessToken, done) => {
+      try {
+        // Check if user is inactive
+        if (accessToken.payload.role !== "teacher") {
+          return done(null, false, {
+            message: "Your are not authorized to access this page",
+          });
+        }
+        return done(null, accessToken.payload);
+      } catch (err) {
+        return done(err);
+      }
+    }
+  )
+);
+
+// This is role based handler
+passport.use(
+  "admin",
+  new JwtStrategy(
+    {
+      secretOrKey: process.env.SECRET_TOKEN,
+      jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("Authorization"),
+    },
+    async (accessToken, done) => {
+      console.log("Teacher check");
       try {
         // Check if user is inactive
         if (accessToken.payload.role !== "ADMIN") {
