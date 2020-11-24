@@ -14,6 +14,7 @@ const SERVER = process.env.SERVER;
 const PORT = process.env.PORT;
 const DB_CONNECTION = process.env.MONGODB_PORT;
 const ATLAS_URL = process.env.ATLAS_URL;
+
 const app = express();
 app.use(passport.initialize());
 
@@ -37,6 +38,7 @@ app.use(
   passport.authenticate("jwt", { session: false }),
   secureRoutes
 );
+// Admin Routes
 app.use(adminBro.options.rootPath, adminRouter);
 
 import bcrypt, { genSalt } from "bcrypt";
