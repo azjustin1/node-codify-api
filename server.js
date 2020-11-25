@@ -16,47 +16,49 @@ const DB_CONNECTION = process.env.MONGODB_PORT;
 const ATLAS_URL = process.env.ATLAS_URL;
 
 const app = express();
+app.use(session({ secret: process.env.SECRET_STRING }));
 app.use(passport.initialize());
+app.use(passport.session());
 
 // Middleware
 app.use(express.json());
 app.use(cookieParser());
-app.use(session({ secret: process.env.SECRET_STRING }));
 app.use(cors());
 app.use(morgan("tiny"));
 app.set("views", __dirname + "/public");
 
 // Routes
-import routes from "./routes/routes";
-import secureRoutes from "./routes/secureRoutes";
+import router from "./routes/routes";
+import userRouter from "./routes/userRoutes";
 import adminRouter, { adminBro } from "./config/admin";
+import classroomRouter from "./routes/classroomRoutes";
+import exerciseRouter from "./routes/exerciseRoutes";
 
-app.use(routes);
-// This route require authenticate
-app.use(
-  "/profile",
-  passport.authenticate("jwt", { session: false }),
-  secureRoutes
-);
-// Admin Routes
+// Any user can access to this route
+app.use(router);
+// This route require authenticated user
+app.use("/user", passport.authenticate("jwt"), userRouter);
+app.use("/classroom", passport.authenticate("jwt"), classroomRouter);
+// app.use(
+//   "/classroom/:alias/exercise",
+//   passport.authenticate("jwt"),
+//   exerciseRouter
+// );
+
 app.use(adminBro.options.rootPath, adminRouter);
 
-import bcrypt, { genSalt } from "bcrypt";
-
-app.get("/hash", async (req, res) => {
-  const salt = await bcrypt.genSalt(10);
-  const hash = await bcrypt.hash("123123", salt);
-  res.send(hash);
-});
-
-const runServer = async () => {
-  // DB config
+// DB config
+export const dbConnection = async () => {
   await mongoose.connect(DB_CONNECTION, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
+    useFindAndModify: true,
   });
+};
 
+const runServer = async () => {
+  dbConnection();
   // Listen
   await app.listen(PORT, () => {
     console.log(`Server is running on server http://localhost:${PORT}`);
@@ -64,3 +66,5 @@ const runServer = async () => {
 };
 
 runServer();
+
+export default app;
