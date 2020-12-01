@@ -25,39 +25,60 @@ router.get("/", async (req, res) => {
 
 // This route to get classroom information by their slug title
 // Ex: This is title ---> this-is-title
-router.get("/:alias", async (req, res) => {
+router.get("/details/:alias", async (req, res) => {
   const classroom = await Classroom.findOne({ alias: req.params.alias });
   if (!classroom) return res.status(404).send({ message: "Not found" });
-
-  res.status(200).json(classroom);
+  return res.status(200).json(classroom);
 });
 
 // Attend to new class by classroom join id
-router.post("/attend", (req, res) => {
+router.post("/attend", async (req, res) => {
   const joinId = req.body.joinId;
-  Classroom.findOne({ joinId: joinId }, async (err, classroom) => {
-    if (err) return res.status(404);
-    const student = await User.findById(req.user.id);
-    classroom.students.push(student);
-    classroom.save();
-    student.attended.push(classroom);
-    student.save();
-    res.status(200).send({ message: "Attend successfully" });
-  });
+
+  const attendClassroom = await Classroom.findOne({ joinId: joinId });
+
+  if (!attendClassroom) {
+    return res.status(404).end();
+  }
+  // Get the student want to attend to add to the classroom students[]
+  const student = await User.findById(req.user.id);
+  try {
+    // Add new student to classroom list students[]
+    attendClassroom.students.push(student);
+    await attendClassroom.save();
+    // Add new attended classroom to student attended list[]
+    student.attended.push(attendClassroom);
+    await student.save();
+    res.status(200).send(attendClassroom);
+  } catch (err) {
+    return res.status(501).send(err.message);
+  }
 });
 
 /* Only teacher account get access */
-// Classroom manage routes
+/* Classroom manage routes */
 router.post("/create", passport.authorize("teacher"), async (req, res) => {
-  const newClassroom = new Classroom(req.body);
-  const user = await User.findById(req.user.id);
-  newClassroom.teacher = user;
-  newClassroom.save();
-  res.status(200).send(newClassroom);
+  const newClassroom = new Classroom({
+    title: req.body.title,
+    description: req.body.description,
+  });
+  const creator = await User.findById(req.user.id);
+  newClassroom.teacher = creator;
+  try {
+    await newClassroom.save();
+    res.status(200).send(newClassroom);
+  } catch (err) {
+    res.status(501).send(err.message);
+  }
 });
 
+/**
+ * This route to update classroom information:
+ * @param title String
+ * @param description String
+ **/
 router.put(
-  "/:alias/update",
+  "/update/:alias",
   passport.authorize("teacher"),
   async (req, res) => {
     const updateClassroom = await Classroom.findOneAndUpdate(
@@ -80,8 +101,9 @@ router.put(
   }
 );
 
+// Delete classroom with alias
 router.delete(
-  "/:alias/delete",
+  "/delete/:alias",
   passport.authorize("teacher"),
   async (req, res) => {
     const deleteClassroom = await Classroom.findOneAndDelete({
@@ -89,75 +111,11 @@ router.delete(
     });
 
     if (!deleteClassroom) {
-      return res.status(501);
+      return res.status(501).send({ message: "Not Found" });
     }
 
-    return res.status(200).end();
+    return res.status(200).send({ message: "Successfully" });
   }
 );
-
-// Exercise manage routes
-router.get("/:alias/exercise", async (req, res) => {
-  const classroom = await Classroom.findOne({ alias: req.params.alias });
-  const exercises = await Exercise.find({
-    classroom: classroom._id,
-  });
-  res.status(200).send(exercises);
-});
-
-router.get("/:alias/exercise/:id", async (req, res) => {
-  const exercises = await Exercise.findById(req.params.id);
-  res.status(200).send(exercises);
-});
-
-router.post("/:alias/exercise/add", async (req, res) => {
-  const user = await User.findById(req.user.id);
-  const classroom = await Classroom.findOne({ alias: req.params.alias });
-  const exercise = new Exercise({
-    title: req.body.title,
-    content: req.body.content,
-    testCase: req.body.testCase,
-    creator: user,
-    classroom: classroom,
-  });
-
-  try {
-    await exercise.save();
-    res.status(200).send(exercise);
-  } catch (err) {
-    res.status(501).send(err.message);
-  }
-});
-
-router.put("/:alias/exercise/update/:id", async (req, res) => {
-  const updateExercise = await Exercise.findByIdAndUpdate(
-    req.params.id,
-    {
-      title: req.body.title,
-      content: req.body.content,
-      testCase: req.body.testCase,
-    },
-    { new: true }
-  );
-
-  try {
-    await updateExercise.save();
-    res.status(200).send(updateExercise);
-  } catch (err) {
-    res.status(501).send(err.message);
-  }
-});
-
-router.delete("/:alias/exercise/delete/:id", async (req, res) => {
-  const deleteExercise = await Exercise.findByIdAndDelete(req.params.id);
-
-  if (!deleteExercise) {
-    return res.status(501).end();
-  }
-
-  return res.status(200).end();
-});
-
-/* -----------------------------------  */
 
 export default router;

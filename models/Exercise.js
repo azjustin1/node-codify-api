@@ -24,6 +24,15 @@ const exerciseSchema = new Schema({
       message: String,
     },
   ],
+  point: {
+    type: Number,
+    default: 10,
+    required: true,
+  },
+  studentPoint: {
+    type: Number,
+    default: 0,
+  },
   creator: {
     type: Schema.Types.ObjectId,
     ref: "User",

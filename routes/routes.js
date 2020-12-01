@@ -7,7 +7,7 @@ import fs from "fs";
 import transporter from "../config/emailConfig";
 // import { io } from '../server'
 //This is custom passport
-import auth from "../libs/auth";
+import auth from "../services/auth";
 
 // Models
 import User from "../models/User";

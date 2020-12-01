@@ -2,7 +2,7 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-import bodyParser from "body-parser";
+import bodyParser, { urlencoded } from "body-parser";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import morgan from "morgan";
@@ -12,8 +12,9 @@ import passport from "passport";
 dotenv.config();
 const SERVER = process.env.SERVER;
 const PORT = process.env.PORT;
-const DB_CONNECTION = process.env.MONGODB_PORT;
+const ROBO3T = process.env.ROBO3T;
 const ATLAS_URL = process.env.ATLAS_URL;
+const DB_CONNECTION = ROBO3T;
 
 const app = express();
 app.use(session({ secret: process.env.SECRET_STRING }));
@@ -22,6 +23,7 @@ app.use(passport.session());
 
 // Middleware
 app.use(express.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors());
 app.use(morgan("tiny"));
@@ -39,28 +41,30 @@ app.use(router);
 // This route require authenticated user
 app.use("/user", passport.authenticate("jwt"), userRouter);
 app.use("/classroom", passport.authenticate("jwt"), classroomRouter);
-// app.use(
-//   "/classroom/:alias/exercise",
-//   passport.authenticate("jwt"),
-//   exerciseRouter
-// );
 
-app.use(adminBro.options.rootPath, adminRouter);
+app.use("/classroom/exercise", passport.authenticate("jwt"), exerciseRouter);
+
+// app.use(adminBro.options.rootPath, adminRouter);
 
 // DB config
-export const dbConnection = async () => {
-  await mongoose.connect(DB_CONNECTION, {
+export const dbConnection = () => {
+  mongoose.connect(DB_CONNECTION, {
     useNewUrlParser: true,
     useUnifiedTopology: true,
     useCreateIndex: true,
     useFindAndModify: true,
   });
+
+  // var db = mongoose.connection;
+  // db.once("open", () => {
+  //   console.log(`Database is connecting ${DB_CONNECTION}`);
+  // });
 };
 
-const runServer = async () => {
+const runServer = () => {
   dbConnection();
   // Listen
-  await app.listen(PORT, () => {
+  app.listen(PORT, () => {
     console.log(`Server is running on server http://localhost:${PORT}`);
   });
 };

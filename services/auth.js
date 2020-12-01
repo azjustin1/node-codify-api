@@ -32,7 +32,6 @@ passport.use(
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("Authorization"),
     },
     async (accessToken, done) => {
-      console.log("Jwt authenticate");
       try {
         // Check if user is inactive
         if (!accessToken.payload.active) {
@@ -78,7 +77,6 @@ passport.use(
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken("Authorization"),
     },
     async (accessToken, done) => {
-      console.log("Teacher check");
       try {
         // Check if user is inactive
         if (accessToken.payload.role !== "ADMIN") {
@@ -119,7 +117,6 @@ passport.use(
         // Validate user input
         const validation = await user.Validate(newUser);
         if (validation.error) {
-          console.log(validation.error);
           return done(null, false, {
             message: validation.error.details[0].message,
           });
@@ -127,7 +124,6 @@ passport.use(
 
         user.save(async (error, user) => {
           if (error) {
-            console.log(error);
             return done(null, false, {
               message: error.message,
             });

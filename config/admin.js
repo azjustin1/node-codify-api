@@ -97,12 +97,9 @@ export const adminBro = new AdminBro(AdminBroOptions);
 
 const adminRouter = AdminBroExpress.buildAuthenticatedRouter(adminBro, {
   authenticate: async (email, password) => {
-    console.log(password);
     const user = await User.findOne({ email });
-    console.log(user);
     if (user) {
       const matched = await bcrypt.compare(password, user.password);
-      console.log(matched);
       if (matched) {
         return user;
       }

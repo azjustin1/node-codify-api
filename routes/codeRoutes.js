@@ -1,6 +1,13 @@
-router.post("/run", (req, res, next) => {
+import express from "express";
+import sandbox from "../services/DockerSandbox";
+
+const router = express.Router();
+
+router.post("/run", (req, res) => {});
+
+router.post("/compile", (req, res, next) => {
   // Get code from the client and write to a file
-  const fileName = "code.c";
+  const fileName = req.body.fileName;
   const writeCodeFile = fs.createWriteStream(fileName);
   writeCodeFile.write(req.body.code);
   writeCodeFile.end();
@@ -16,7 +23,6 @@ router.post("/run", (req, res, next) => {
     (error, stdout, stderr) => {
       // Send the compile error to user
       if (error) {
-        console.log(stdout);
         res.status(501).send(stderr);
         // If compile success
       } else {
@@ -49,3 +55,5 @@ router.post("/run", (req, res, next) => {
     }
   );
 });
+
+export default router;

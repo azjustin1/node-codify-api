@@ -1,9 +1,7 @@
 import mongoose from "mongoose";
-import slug from "mongoose-slug-generator";
+import slugify from "slugify";
 
 const Schema = mongoose.Schema;
-
-mongoose.plugin(slug);
 
 const classroomSchema = new Schema({
   joinId: {
@@ -21,7 +19,6 @@ const classroomSchema = new Schema({
   },
   alias: {
     type: String,
-    slug: "title",
     unique: true,
   },
   description: {
@@ -41,6 +38,11 @@ const classroomSchema = new Schema({
       },
     },
   ],
+});
+
+classroomSchema.pre("save", function (next) {
+  this.alias = slugify(this.title, { lower: true, locale: "vi" });
+  return next();
 });
 
 export default mongoose.model("Classroom", classroomSchema);
