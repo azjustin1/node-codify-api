@@ -1,59 +1,61 @@
 import express from "express";
+import fs from "fs";
 import sandbox from "../services/DockerSandbox";
+import { exec } from "child_process";
 
 const router = express.Router();
 
-router.post("/run", (req, res) => {});
+router.post("/run", async (req, res) => {
+  let path = __dirname.replace(/\\/g, "/");
 
-router.post("/compile", (req, res, next) => {
-  // Get code from the client and write to a file
-  const fileName = req.body.fileName;
-  const writeCodeFile = fs.createWriteStream(fileName);
-  writeCodeFile.write(req.body.code);
-  writeCodeFile.end();
-  // Get input from user test
-  const input = "input.txt";
-  const writeInputFile = fs.createWriteStream(input);
-  writeInputFile.write(req.body.input);
-  writeInputFile.end();
-  // Build created code file and make it runnable
-  const child = execFile(
-    "gcc",
-    [fileName, "-o", "code"],
-    (error, stdout, stderr) => {
-      // Send the compile error to user
-      if (error) {
-        res.status(501).send(stderr);
-        // If compile success
-      } else {
-        // Run code.exe and send the result to the client
-        const child = execFile(
-          // This is code run for window server
-          "cmd",
-          ["/c", "code.exe<input.txt"],
-          // If linux server use this "./code<input.txt"
-          (error, stdout, stderr) => {
-            if (error) {
-              throw error;
-            }
-            // This is the result after run code
-            const result = stdout;
-            // Delete files have been created after send to the user
-            try {
-              fs.unlinkSync("./code.exe");
-              fs.unlinkSync("./code.c");
-              fs.unlinkSync("./input.txt");
-              //file removed
-            } catch (err) {
-              console.error(err);
-            }
-            // Send the result to client
-            res.status(200).send(result);
-          }
-        );
+  fs.mkdir("temp", { recursive: true }, (err) => {
+    if (err) res.send(err);
+    const compiler = req.body.compiler;
+    const codeFile = "code" + req.user.id + "." + req.body.language;
+    const writeCodeFile = fs.createWriteStream(__dirname + "/temp/" + codeFile);
+    writeCodeFile.write(req.body.code);
+    writeCodeFile.end();
+    // Create user input file in temp folder and the name is input + user id
+    const inputFile = "input" + req.user.id + ".txt";
+    const writeInputFile = fs.createWriteStream(
+      __dirname + "/temp/" + inputFile
+    );
+    writeInputFile.write(req.body.input);
+    writeInputFile.end();
+    const outputFile = "output" + req.user.id;
+    const runCommand =
+      "sh " +
+      path +
+      "/run-docker.sh " +
+      path +
+      "/temp " +
+      compiler +
+      " " +
+      codeFile +
+      " " +
+      inputFile +
+      " " +
+      outputFile;
+    // console.log(runCommand);
+    exec(runCommand, (err, stdout, stderr) => {
+      console.log(err);
+      if (stderr) {
+        fs.unlinkSync(__dirname + "/temp/" + codeFile);
+        fs.unlinkSync(__dirname + "/temp/" + inputFile);
+        if (fs.existsSync(__dirname + "/temp/" + outputFile)) {
+          fs.unlinkSync(__dirname + "/temp/" + outputFile);
+        }
+        return res.status(501).send(stderr);
       }
-    }
-  );
+      const output = stdout;
+      fs.unlinkSync(__dirname + "/temp/" + codeFile);
+      fs.unlinkSync(__dirname + "/temp/" + inputFile);
+      if (fs.existsSync(__dirname + "/temp/" + outputFile)) {
+        fs.unlinkSync(__dirname + "/temp/" + outputFile);
+      }
+      res.status(200).send(output);
+    });
+  });
 });
 
 export default router;

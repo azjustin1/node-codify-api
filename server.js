@@ -23,7 +23,7 @@ app.use(passport.session());
 
 // Middleware
 app.use(express.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors());
 app.use(morgan("tiny"));
@@ -35,14 +35,15 @@ import userRouter from "./routes/userRoutes";
 import adminRouter, { adminBro } from "./config/admin";
 import classroomRouter from "./routes/classroomRoutes";
 import exerciseRouter from "./routes/exerciseRoutes";
+import codeRouter from "./routes/codeRoutes";
 
 // Any user can access to this route
 app.use(router);
 // This route require authenticated user
 app.use("/user", passport.authenticate("jwt"), userRouter);
 app.use("/classroom", passport.authenticate("jwt"), classroomRouter);
-
 app.use("/classroom/exercise", passport.authenticate("jwt"), exerciseRouter);
+app.use("/code", passport.authenticate("jwt"), codeRouter);
 
 // app.use(adminBro.options.rootPath, adminRouter);
 

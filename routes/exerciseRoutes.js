@@ -1,6 +1,8 @@
 import express from "express";
 import passport from "passport";
 import DockerSandbox from "../services/DockerSandbox";
+import fs from "fs";
+import { execFile } from "child_process";
 
 const router = express.Router();
 
@@ -27,20 +29,6 @@ router.get("/:id/:classroom", async (req, res) => {
   } catch (err) {
     return res.status(404).send({ message: "Not found" });
   }
-});
-
-// Run code through Docker Sandbox
-router.post("/:id/run/:classroom", async (req, res) => {
-  const fileName = req.body.fileName;
-  const writeCodeFile = fs.createWriteStream(fileName);
-  writeCodeFile.write(req.body.code);
-  writeCodeFile.end();
-  // Get input from user test
-  const input = "/sandbox/input.txt";
-  const writeInputFile = fs.createWriteStream(input);
-  writeInputFile.write(req.body.input);
-  writeInputFile.end();
-  res.send({ code: req.body.code, language: req.body.language });
 });
 
 /** Only Teacher can use these routes **/

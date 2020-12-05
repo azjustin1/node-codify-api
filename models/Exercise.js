@@ -1,8 +1,5 @@
 import { object } from "joi";
 import mongoose from "mongoose";
-import slug from "mongoose-slug-generator";
-
-mongoose.plugin(slug);
 
 const Schema = mongoose.Schema;
 
@@ -28,10 +25,6 @@ const exerciseSchema = new Schema({
     type: Number,
     default: 10,
     required: true,
-  },
-  studentPoint: {
-    type: Number,
-    default: 0,
   },
   creator: {
     type: Schema.Types.ObjectId,
