@@ -4,7 +4,7 @@ import passport from "passport";
 // Models
 import User from "../models/User";
 import Classroom from "../models/Classroom";
-import Exercise from "../models/Exercise";
+import Attended from "../models/Attended";
 
 const router = express.Router();
 
@@ -35,21 +35,30 @@ router.get("/details/:alias", async (req, res) => {
 router.post("/attend", async (req, res) => {
   const joinId = req.body.joinId;
 
-  const attendClassroom = await Classroom.findOne({ joinId: joinId });
+  const classroom = await Classroom.findOne({ joinId: joinId });
 
-  if (!attendClassroom) {
-    return res.status(404).end();
+  if (!classroom) {
+    return res.status(404).send("Not found");
   }
   // Get the student want to attend to add to the classroom students[]
   const student = await User.findById(req.user.id);
+  const attended = await Attended.findOne({
+    classroom: classroom,
+    student: student,
+  });
+
+  if (attended) {
+    res.status(501).send("Already attended!");
+  }
+
+  attended = new Attended({
+    classroom: classroom,
+    student: student,
+  });
+
   try {
-    // Add new student to classroom list students[]
-    attendClassroom.students.push(student);
-    await attendClassroom.save();
-    // Add new attended classroom to student attended list[]
-    student.attended.push(attendClassroom);
-    await student.save();
-    res.status(200).send(attendClassroom);
+    await attended.save();
+    res.status(200).send(attended);
   } catch (err) {
     return res.status(501).send(err.message);
   }
@@ -111,10 +120,13 @@ router.delete(
     });
 
     if (!deleteClassroom) {
-      return res.status(501).send({ message: "Not Found" });
+      return res.status(404).send({ message: "Not Found" });
     }
 
-    return res.status(200).send({ message: "Successfully" });
+    const deleteAttendedClassrooms = await AttendedClassroom.deleteMany({
+      classroom: deleteClassroom._id,
+    });
+    return res.status(200).send({ message: "Delete successfully" });
   }
 );
 

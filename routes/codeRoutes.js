@@ -1,60 +1,101 @@
 import express from "express";
 import fs from "fs";
-import sandbox from "../services/DockerSandbox";
+import SandBox from "../DockerSandbox/DockerSandbox";
 import { exec } from "child_process";
+import async from "async-es";
+
+// Models
+import User from "../models/User";
+import Exercise from "../models/Exercise";
+import Result from "../models/Result";
 
 const router = express.Router();
 
-router.post("/run", async (req, res) => {
-  let path = __dirname.replace(/\\/g, "/");
+let folder = "temp";
+let codes = [];
+let inputs = [];
+let outputs = [];
+let codeContent;
+let codeFileName;
+let inputContent;
+let inputFileName;
+let outputFileName;
+let sandBoxes = [];
+let output = [];
 
-  fs.mkdir("temp", { recursive: true }, (err) => {
-    if (err) res.send(err);
-    const compiler = req.body.compiler;
-    const codeFile = "code" + req.user.id + "." + req.body.language;
-    const writeCodeFile = fs.createWriteStream(__dirname + "/temp/" + codeFile);
-    writeCodeFile.write(req.body.code);
-    writeCodeFile.end();
-    // Create user input file in temp folder and the name is input + user id
-    const inputFile = "input" + req.user.id + ".txt";
-    const writeInputFile = fs.createWriteStream(
-      __dirname + "/temp/" + inputFile
-    );
-    writeInputFile.write(req.body.input);
-    writeInputFile.end();
-    const outputFile = "output" + req.user.id;
-    const runCommand =
-      "sh " +
-      path +
-      "/run-docker.sh " +
-      path +
-      "/temp " +
-      compiler +
-      " " +
-      codeFile +
-      " " +
-      inputFile +
-      " " +
-      outputFile;
-    // console.log(runCommand);
-    exec(runCommand, (err, stdout, stderr) => {
-      console.log(err);
-      if (stderr) {
-        fs.unlinkSync(__dirname + "/temp/" + codeFile);
-        fs.unlinkSync(__dirname + "/temp/" + inputFile);
-        if (fs.existsSync(__dirname + "/temp/" + outputFile)) {
-          fs.unlinkSync(__dirname + "/temp/" + outputFile);
-        }
-        return res.status(501).send(stderr);
-      }
-      const output = stdout;
-      fs.unlinkSync(__dirname + "/temp/" + codeFile);
-      fs.unlinkSync(__dirname + "/temp/" + inputFile);
-      if (fs.existsSync(__dirname + "/temp/" + outputFile)) {
-        fs.unlinkSync(__dirname + "/temp/" + outputFile);
-      }
-      res.status(200).send(output);
-    });
+router.post("/run", async (req, res) => {
+  const language = req.body.language;
+  const compiler = req.body.compiler;
+
+  const code = {
+    codeContent: req.body.code,
+    codeFileName: "code" + req.user.id,
+  };
+
+  const input = {
+    inputContent: req.body.input,
+    inputFileName: "input" + req.user.id,
+  };
+  inputs.push(input);
+
+  const output = "output" + req.user.id;
+  outputs.push(output);
+
+  const sandBox = new SandBox(
+    folder,
+    code,
+    inputs,
+    outputs,
+    language,
+    compiler
+  );
+
+  sandBox.run((result) => {
+    res.send(result);
+  });
+});
+
+const testCode = async (student, testCases, compiler) => {
+  let result = [];
+  let sandBox;
+  for (let i = 0; i < 1000; i++) {
+    result.push(i);
+  }
+  return result;
+};
+
+router.post("/submit", async (req, res) => {
+  const exerciseId = req.body.exerciseId;
+  const exercise = await Exercise.findById(exerciseId);
+  const student = await User.findById(req.user.id);
+  const language = req.body.language;
+  const compiler = req.body.compiler;
+
+  const code = {
+    codeContent: req.body.code,
+    codeFileName: "code" + req.user.id,
+  };
+  for (const [i, testCase] of exercise.testCases.entries()) {
+    const input = {
+      inputContent: testCase.input,
+      inputFileName: "input" + req.user.id + i,
+    };
+    inputs.push(input);
+    const output = "output" + req.user.id;
+    outputs.push(output);
+  }
+
+  const sandBox = new SandBox(
+    folder,
+    code,
+    inputs,
+    outputs,
+    language,
+    compiler
+  );
+
+  sandBox.run((result) => {
+    res.send(result);
   });
 });
 

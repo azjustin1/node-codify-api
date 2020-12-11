@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,54 +8,59 @@
     <style>
         * {
             margin: 0;
-            
         }
-        
+
         a {
             text-decoration: none;
             color: white
         }
 
         .container {
-            display: flex;
+
+            flex-grow: 0;
+            flex-shrink: 0;
+            flex-basis: 50%;
             justify-content: center;
             align-items: center;
+
         }
 
         .confirmation {
-          
-            background-color: grey;
+
+            background-color: rgb(190, 190, 190);
             padding: 15px;
-        }   
+        }
 
         .confirmation__title {
-            color: white;
+            color: black;
             margin: auto;
         }
 
         .confirmation__button {
             padding: 10px;
-            
-            background-color: teal;
+            background-color: rgb(45, 96, 206);
             text-align: center;
             border-radius: 50px;
             width: 200px;
-            justify-self: center;
+            margin-top: 10;
         }
-
     </style>
 </head>
+
 <body>
     <div class="container">
         <div class="confirmation">
             <div class="confirmation__title">
                 <h1><%= subject %></h1>
-                <!-- <h1>Verify your email address</h1> -->
+                <h2>Please click the button below to complete your registration</h2>
             </div>
             <div class="confirmation__button">
-                <a style="height: 200px; width: 200px; background-color: teal;" href="http://<%= domain%>/activate/<%=confirmToken%>">Verify Email Address</a>
+                <a style="height: 200px; width: 200px; text-decoration: none; color: white;"
+                    href="http://<%= domain%>/activate/<%=confirmToken%>">Verify
+                    Email Address</a>
             </div>
-        </div>  
+        </div>
     </div>
 </body>
+
 </html>

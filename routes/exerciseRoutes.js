@@ -1,6 +1,6 @@
 import express from "express";
 import passport from "passport";
-import DockerSandbox from "../services/DockerSandbox";
+import DockerSandbox from "../DockerSandbox/DockerSandbox";
 import fs from "fs";
 import { execFile } from "child_process";
 
@@ -44,7 +44,7 @@ router.post(
     const exercise = new Exercise({
       title: req.body.title,
       content: req.body.content,
-      testCase: req.body.testCase,
+      testCases: req.body.testCase,
       creator: creator,
       classroom: classroom,
     });
@@ -74,7 +74,7 @@ router.put(
         {
           title: req.body.title,
           content: req.body.content,
-          testCase: req.body.testCase,
+          testCase: req.body.testCases,
         },
         { new: true }
       );

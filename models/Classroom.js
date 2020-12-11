@@ -30,17 +30,10 @@ const classroomSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
-  students: [
-    {
-      studentId: {
-        type: Schema.Types.ObjectId,
-        ref: "User",
-      },
-    },
-  ],
 });
 
 classroomSchema.pre("save", function (next) {
+  console.log(this._id);
   this.alias = slugify(this.title, { lower: true, locale: "vi" });
   return next();
 });

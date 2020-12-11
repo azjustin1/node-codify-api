@@ -26,12 +26,6 @@ const userSchema = new Schema({
     type: Boolean,
     default: false,
   },
-  attended: [
-    {
-      type: Schema.Types.ObjectId,
-      ref: "Classroom",
-    },
-  ],
   role: {
     type: String,
     enum: ["admin", "student", "teacher"],
@@ -78,7 +72,6 @@ userSchema.methods.comparePassword = function (confirmPassword, next) {
 };
 
 userSchema.methods.generateAccessToken = function () {
-  console.log(this._id);
   // This contain user information to authenticate
   const payload = {
     id: this._id,

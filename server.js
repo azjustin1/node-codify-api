@@ -56,10 +56,10 @@ export const dbConnection = () => {
     useFindAndModify: true,
   });
 
-  // var db = mongoose.connection;
-  // db.once("open", () => {
-  //   console.log(`Database is connecting ${DB_CONNECTION}`);
-  // });
+  var db = mongoose.connection;
+  db.once("open", () => {
+    console.log(`Database is connecting ${DB_CONNECTION}`);
+  });
 };
 
 const runServer = () => {

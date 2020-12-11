@@ -9,5 +9,8 @@ if [ "$compiler" = "g++" ]; then
         echo $(./temp/$outputFile</temp/$inputFile)
     fi
 else
-    echo $($compiler temp/$codeFile<temp/$inputFile)
+    $($compiler temp/$codeFile<temp/$inputFile)
+    if [ $? -eq 0 ]; then
+        echo $($compiler temp/$codeFile<temp/$inputFile)
+    fi
 fi
