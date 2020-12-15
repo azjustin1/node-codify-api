@@ -13,15 +13,7 @@ var sandBox = function (folder, code, inputs, outputs, language, compiler) {
 
 sandBox.prototype.cleanFile = function () {
   const sandbox = this;
-  console.log(
-    __dirname +
-      "/" +
-      sandbox.folder +
-      "/" +
-      sandbox.code.codeFileName +
-      "." +
-      sandbox.language
-  );
+
   if (
     fs.existsSync(
       __dirname +
@@ -101,7 +93,7 @@ sandBox.prototype.prepare = function (success) {
 };
 
 sandBox.prototype.execute = async function (success) {
-  let output = [];
+  let outputs = [];
   const sandbox = this;
 
   for (const [i, input] of sandbox.inputs.entries()) {
@@ -126,15 +118,21 @@ sandBox.prototype.execute = async function (success) {
         // this.cleanFile();
 
         if (stderr) {
-          // sandbox.cleanFile();
           await output.push(stderr.trim());
         }
-        await output.push(stdout.trim());
-        if (output.length === sandbox.inputs.length) {
+
+        const result = stdout.trim().split("\n");
+
+        const output = {
+          input: input.inputContent,
+          output: result[0],
+          runTime: parseInt(result[1]),
+        };
+        await outputs.push(output);
+        if (outputs.length === sandbox.inputs.length) {
           sandbox.cleanFile();
-          success(output);
+          success(outputs);
         }
-        // sandbox.cleanFile();
       }
     );
   }

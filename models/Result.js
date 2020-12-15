@@ -12,7 +12,7 @@ const resultSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Exercise",
   },
-  testCasesPass: [],
+  testCases: [],
   studentCode: { type: String },
   score: {
     type: Number,
@@ -22,8 +22,10 @@ const resultSchema = new Schema({
 
 resultSchema.methods.getTotalPoint = function () {
   let sumPoint = 0;
-  for (const testCase of this.testCasesPass) {
-    sumPoint += testCase.point;
+  for (const testCase of this.testCases) {
+    if (testCase.pass) {
+      sumPoint += testCase.point;
+    }
   }
   return sumPoint;
 };

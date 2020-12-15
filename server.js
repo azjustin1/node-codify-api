@@ -32,7 +32,7 @@ app.set("views", __dirname + "/public");
 // Routes
 import router from "./routes/routes";
 import userRouter from "./routes/userRoutes";
-import adminRouter, { adminBro } from "./config/admin";
+// import adminRouter, { adminBro } from "./config/admin";
 import classroomRouter from "./routes/classroomRoutes";
 import exerciseRouter from "./routes/exerciseRoutes";
 import codeRouter from "./routes/codeRoutes";

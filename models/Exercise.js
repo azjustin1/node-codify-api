@@ -20,6 +20,7 @@ const exerciseSchema = new Schema({
       {
         input: { type: String, required: true },
         output: { type: String, required: true },
+        actualOutput: String,
         timeLimit: { type: Number, required: true, default: 3000 },
         point: { type: Number, required: true, default: 20 },
         pass: { type: Boolean, default: false },
