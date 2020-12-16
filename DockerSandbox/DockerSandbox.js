@@ -118,17 +118,21 @@ sandBox.prototype.execute = async function (success) {
         // this.cleanFile();
 
         if (stderr) {
-          await output.push(stderr.trim());
+          await outputs.push({ type: "error", output: stderr.trim() });
+        } else if (stdout) {
+          const result = stdout.trim().split("\n");
+          const output = {
+            input: input.inputContent,
+            output: result[0],
+            runTime: parseInt(result[1]),
+          };
+          await outputs.push({
+            type: "success",
+            input: input.inputContent,
+            output: result[0],
+            runTime: parseInt(result[1]),
+          });
         }
-
-        const result = stdout.trim().split("\n");
-
-        const output = {
-          input: input.inputContent,
-          output: result[0],
-          runTime: parseInt(result[1]),
-        };
-        await outputs.push(output);
         if (outputs.length === sandbox.inputs.length) {
           sandbox.cleanFile();
           success(outputs);

@@ -59,7 +59,10 @@ router.post("/submit", async (req, res) => {
     codeFileName: "code" + req.user.id,
   };
 
-  let result = await Result.findOne({ student: student, exercise: exercise });
+  let result = await Result.findOne({
+    student: student,
+    exercise: exercise,
+  });
 
   if (!result) {
     result = new Result({
@@ -71,7 +74,7 @@ router.post("/submit", async (req, res) => {
     await result.save();
   }
 
-  for (const [i, testCase] of result.testCases.entries()) {
+  for (const [i, testCase] of exercise.testCases.entries()) {
     const input = {
       inputContent: testCase.input,
       inputFileName: "input" + req.user.id + i,
@@ -91,85 +94,108 @@ router.post("/submit", async (req, res) => {
   );
 
   sandBox.run(async (testResults) => {
-    testResults.forEach(async (testResult, i) => {
-      result.testCases.forEach(async (testCase, i) => {
-        if (
-          testCase.input === testResult.input &&
-          testCase.output === testResult.output &&
-          testCase.timeLimit >= testResult.runTime
-        ) {
-          await Result.update(
-            {
-              student: student,
-              exercise: exercise,
-              "testCases.input": testResult.input,
-              "testCases.output": testResult.output,
-            },
-            {
-              $set: {
-                "testCases.$.actualOutput": testResult.output,
-                "testCases.$.pass": true,
-                "testCases.$.message": "Correct",
+    let context = [];
+    for (var i = 0; i < testResults.length; i++) {
+      if (testResults[i].type === "error") {
+        res.send(testResults[i].output);
+        break;
+      } else if (testResults[i].type === "success") {
+        result.testCases.forEach(async (testCase, i) => {
+          if (
+            testCase.input === testResults[i].input &&
+            testCase.output === testResults[i].output &&
+            testCase.timeLimit >= testResults[i].runTime
+          ) {
+            await Result.update(
+              {
+                student: student,
+                exercise: exercise,
+                "testCases.input": testResults[i].input,
+                "testCases.output": testResults[i].output,
               },
-            }
-          );
-        }
-
-        if (
-          testCase.input === testResult.input &&
-          testCase.output !== testResult.output &&
-          testCase.timeLimit >= testResult.runTime
-        ) {
-          await Result.update(
-            {
-              student: student,
-              exercise: exercise,
-              "testCases.input": testResult.input,
-            },
-            {
-              $set: {
-                "testCases.$.actualOutput": testResult.output,
-                "testCases.$.pass": false,
-                "testCases.$.message": "Incorrect",
+              {
+                $set: {
+                  "testCases.$.actualOutput": testResults[i].output,
+                  "testCases.$.pass": true,
+                  "testCases.$.message": "Correct",
+                },
+              }
+            );
+          }
+          if (
+            testCase.input === testResults[i].input &&
+            testCase.output !== testResults[i].output &&
+            testCase.timeLimit >= testResults[i].runTime
+          ) {
+            await Result.update(
+              {
+                student: student,
+                exercise: exercise,
+                "testCases.input": testResults[i].input,
               },
-            }
-          );
-        }
-
-        if (
-          testCase.input === testResult.input &&
-          testCase.timeLimit < testResult.runTime
-        ) {
-          await Result.update(
-            {
-              student: student,
-              exercise: exercise,
-              "testCases.input": testResult.input,
-              "testCases.output": testResult.output,
-            },
-            {
-              $set: {
-                "testCases.$.actualOutput": testResult.output,
-                "testCases.$.pass": false,
-                "testCases.$.message": "Over Time",
+              {
+                $set: {
+                  "testCases.$.actualOutput": testResults[i].output,
+                  "testCases.$.pass": false,
+                  "testCases.$.message": "Incorrect",
+                },
+              }
+            );
+          }
+          if (
+            testCase.input === testResults[i].input &&
+            testCase.timeLimit < testResults[i].runTime
+          ) {
+            await Result.update(
+              {
+                student: student,
+                exercise: exercise,
+                "testCases.input": testResults[i].input,
+                "testCases.output": testResults[i].output,
               },
-            }
-          );
-        }
-      });
+              {
+                $set: {
+                  "testCases.$.actualOutput": testResults[i].output,
+                  "testCases.$.pass": false,
+                  "testCases.$.message": "Over Time",
+                },
+              }
+            );
+          }
+        });
+      }
 
-      // Send to the client after check all test case
       if (i === testResults.length - 1) {
         const updateResult = await Result.findOne({
           student: student,
           exercise: exercise,
         });
-        res.send({
+        const result = {
           point: updateResult.getTotalPoint(),
-          testResults: updateResult,
-        });
+          testCases: updateResult.testCases,
+        };
+        context.push(result);
+        res.send(context);
       }
-    });
+    }
+
+    //   // Send to the client after check all test case
+    //   if (i === testResults.length - 1) {
+    //     console.log("End");
+    //     const updateResult = await Result.findOne({
+    //       student: student,
+    //       exercise: exercise,
+    //     });
+
+    //     const result = {
+    //       point: updateResult.getTotalPoint(),
+    //       testCases: updateResult.testCases,
+    //     };
+    //     context.push(result);
+
+    //     return res.send(context);
+    //   }
+    // });
   });
 });
 
