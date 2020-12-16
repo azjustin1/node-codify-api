@@ -40,7 +40,18 @@ router.post("/run", async (req, res) => {
   );
 
   sandBox.run((result) => {
-    res.send(result);
+    let context = [];
+    for (var i = 0; i < result.length; i++) {
+      if (result[i].type === "error") {
+        res.status(200).send(result[i].output);
+        break;
+      }
+
+      context.push(result[i].output);
+      if (i === result.length - 1) {
+        res.status(200).send(context);
+      }
+    }
   });
 });
 
@@ -178,24 +189,6 @@ router.post("/submit", async (req, res) => {
         res.send(context);
       }
     }
-
-    //   // Send to the client after check all test case
-    //   if (i === testResults.length - 1) {
-    //     console.log("End");
-    //     const updateResult = await Result.findOne({
-    //       student: student,
-    //       exercise: exercise,
-    //     });
-
-    //     const result = {
-    //       point: updateResult.getTotalPoint(),
-    //       testCases: updateResult.testCases,
-    //     };
-    //     context.push(result);
-
-    //     return res.send(context);
-    //   }
-    // });
   });
 });
 
