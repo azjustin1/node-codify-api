@@ -35,14 +35,21 @@ import userRouter from "./routes/userRoutes";
 // import adminRouter, { adminBro } from "./config/admin";
 import classroomRouter from "./routes/classroomRoutes";
 import exerciseRouter from "./routes/exerciseRoutes";
+import resultRouter from "./routes/resultRoutes";
 import codeRouter from "./routes/codeRoutes";
 
 // Any user can access to this route
 app.use(router);
 // This route require authenticated user
-app.use("/user", passport.authenticate("jwt"), userRouter);
-app.use("/classroom", passport.authenticate("jwt"), classroomRouter);
-app.use("/classroom/exercise", passport.authenticate("jwt"), exerciseRouter);
+app.use("/users", passport.authenticate("jwt"), userRouter);
+app.use("/classrooms", passport.authenticate("jwt"), classroomRouter);
+app.use(
+  "/classrooms/:alias/exercises",
+  passport.authenticate("jwt"),
+  exerciseRouter
+);
+app.use("/classrooms/:alias/exercises/:id/results", resultRouter);
+
 app.use("/code", passport.authenticate("jwt"), codeRouter);
 
 // app.use(adminBro.options.rootPath, adminRouter);

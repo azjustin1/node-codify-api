@@ -19,6 +19,10 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
+  name: {
+    type: String,
+    min: 6,
+  },
   imgUrl: {
     type: String,
   },

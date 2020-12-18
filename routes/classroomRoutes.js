@@ -6,6 +6,8 @@ import User from "../models/User";
 import Classroom from "../models/Classroom";
 import Attended from "../models/Attended";
 
+import resultRouter from "./resultRoutes";
+
 const router = express.Router();
 
 // Get all the created and joined classroom
@@ -25,9 +27,13 @@ router.get("/", async (req, res) => {
 
 // This route to get classroom information by their slug title
 // Ex: This is title ---> this-is-title
-router.get("/details/:alias", async (req, res) => {
-  const classroom = await Classroom.findOne({ alias: req.params.alias });
+router.get("/:alias", async (req, res) => {
+  const classroom = await Classroom.findOne({
+    alias: req.params.alias,
+  }).populate("teacher", "-password");
+
   if (!classroom) return res.status(404).send({ message: "Not found" });
+
   return res.status(200).json(classroom);
 });
 
@@ -86,48 +92,40 @@ router.post("/create", passport.authorize("teacher"), async (req, res) => {
  * @param title String
  * @param description String
  **/
-router.put(
-  "/update/:alias",
-  passport.authorize("teacher"),
-  async (req, res) => {
-    const updateClassroom = await Classroom.findOneAndUpdate(
-      {
-        alias: req.params.alias,
-      },
-      {
-        title: req.body.title,
-        description: req.body.description,
-      },
-      { new: true }
-    );
+router.put("/:alias", passport.authorize("teacher"), async (req, res) => {
+  const updateClassroom = await Classroom.findOneAndUpdate(
+    {
+      alias: req.params.alias,
+    },
+    {
+      title: req.body.title,
+      description: req.body.description,
+    },
+    { new: true }
+  );
 
-    try {
-      updateClassroom.save();
-      res.send(updateClassroom);
-    } catch (err) {
-      return res.status(501).send(err.message);
-    }
+  try {
+    updateClassroom.save();
+    res.send(updateClassroom);
+  } catch (err) {
+    return res.status(501).send(err.message);
   }
-);
+});
 
 // Delete classroom with alias
-router.delete(
-  "/delete/:alias",
-  passport.authorize("teacher"),
-  async (req, res) => {
-    const deleteClassroom = await Classroom.findOneAndDelete({
-      alias: req.params.alias,
-    });
+router.delete("/:alias", passport.authorize("teacher"), async (req, res) => {
+  const deleteClassroom = await Classroom.findOneAndDelete({
+    alias: req.params.alias,
+  });
 
-    if (!deleteClassroom) {
-      return res.status(404).send({ message: "Not Found" });
-    }
-
-    const deleteAttendedClassrooms = await AttendedClassroom.deleteMany({
-      classroom: deleteClassroom._id,
-    });
-    return res.status(200).send({ message: "Delete successfully" });
+  if (!deleteClassroom) {
+    return res.status(404).send({ message: "Not Found" });
   }
-);
+
+  const deleteAttendedClassrooms = await AttendedClassroom.deleteMany({
+    classroom: deleteClassroom._id,
+  });
+  return res.status(200).send({ message: "Delete successfully" });
+});
 
 export default router;

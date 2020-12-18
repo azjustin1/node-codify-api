@@ -5,6 +5,7 @@ import JWT from "jsonwebtoken";
 import { execFile, spawn, exec } from "child_process";
 import fs from "fs";
 import transporter from "../config/emailConfig";
+
 // import { io } from '../server'
 //This is custom passport
 import auth from "../services/auth";
@@ -12,6 +13,8 @@ import auth from "../services/auth";
 // Models
 import User from "../models/User";
 import Classroom from "../models/Classroom";
+
+import resultRouter from "./resultRoutes";
 
 dotenv.config();
 
@@ -71,10 +74,10 @@ router.get("/activate/:activationToken", (req, res) => {
   });
 });
 
-// Seach classrooms or excercises
+// Search classrooms or exercises
 router.get("/search", async (req, res) => {
   const foundClassroom = await Classroom.find({
-    title: { $regex: req.query.classroom, $options: "i" },
+    title: { $regex: req.query.classrooms, $options: "i" },
   });
 
   if (foundClassroom.length === 0)
