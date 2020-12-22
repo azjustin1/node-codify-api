@@ -11,6 +11,10 @@ const attendedSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
+  point: {
+    type: Number,
+    default: 0,
+  },
 });
 
 export default mongoose.model("Attended", attendedSchema);

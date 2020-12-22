@@ -1,8 +1,5 @@
 import express from "express";
 import passport from "passport";
-import DockerSandbox from "../DockerSandbox/DockerSandbox";
-import fs from "fs";
-import { execFile } from "child_process";
 
 const router = express.Router({ mergeParams: true });
 
@@ -51,6 +48,7 @@ router.post("/create", passport.authorize("teacher"), async (req, res) => {
     title: req.body.title,
     content: req.body.content,
     testCases: req.body.testCase,
+    expireDate: req.body.expireDate,
     creator: creator,
     classroom: classroom,
   });

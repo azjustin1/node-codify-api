@@ -47,6 +47,13 @@ const exerciseSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
+  createAt: {
+    type: Date,
+    default: Date.now(),
+  },
+  expireTime: {
+    type: Date,
+  },
   classroom: {
     type: Schema.Types.ObjectId,
     ref: "Classroom",

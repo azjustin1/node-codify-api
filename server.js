@@ -39,6 +39,7 @@ import resultRouter from "./routes/resultRoutes";
 import codeRouter from "./routes/codeRoutes";
 
 // Any user can access to this route
+
 app.use(router);
 // This route require authenticated user
 app.use("/users", passport.authenticate("jwt"), userRouter);

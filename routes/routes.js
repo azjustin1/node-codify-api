@@ -2,13 +2,10 @@ import express from "express";
 import passport from "passport";
 import dotenv from "dotenv";
 import JWT from "jsonwebtoken";
-import { execFile, spawn, exec } from "child_process";
-import fs from "fs";
-import transporter from "../config/emailConfig";
 
 // import { io } from '../server'
 //This is custom passport
-import auth from "../services/auth";
+import auth from "../middleware/auth";
 
 // Models
 import User from "../models/User";

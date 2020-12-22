@@ -13,13 +13,9 @@ const router = express.Router();
 // Get all the created and joined classroom
 router.get("/", async (req, res) => {
   try {
-    const classroom = await Classroom.find({
-      $or: [
-        { students: { $elemMatch: { _id: req.user.id } } },
-        { teacher: req.user.id },
-      ],
-    });
-    res.status(200).send(classroom);
+    const createdClassroom = await Classroom.find({ teacher: req.user.id });
+    const attendedClassroom = await Attended.find({ student: req.user.id });
+    res.status(200).send({ createdClassroom, attendedClassroom });
   } catch (err) {
     res.send(err);
   }
@@ -37,6 +33,14 @@ router.get("/:alias", async (req, res) => {
   return res.status(200).json(classroom);
 });
 
+router.get("/:alias/attend", async (req, res) => {
+  const classroom = await Classroom.findOne({ alias: req.params.alias });
+  const attendedStudents = await Attended.find({
+    classroom: classroom,
+  }).populate("student");
+  res.status(200).send(attendedStudents);
+});
+
 // Attend to new class by classroom join id
 router.post("/attend", async (req, res) => {
   const joinId = req.body.joinId;
@@ -48,13 +52,13 @@ router.post("/attend", async (req, res) => {
   }
   // Get the student want to attend to add to the classroom students[]
   const student = await User.findById(req.user.id);
-  const attended = await Attended.findOne({
+  let attended = await Attended.findOne({
     classroom: classroom,
     student: student,
   });
 
   if (attended) {
-    res.status(501).send("Already attended!");
+    return res.status(501).send("Already attended!");
   }
 
   attended = new Attended({
