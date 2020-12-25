@@ -22,18 +22,17 @@ const exerciseSchema = new Schema({
         output: { type: String, required: true },
         actualOutput: String,
         timeLimit: { type: Number, required: true, default: 3000 },
-        point: { type: Number, required: true, default: 20 },
+        point: { type: Number, required: true },
         pass: { type: Boolean, default: false },
         message: String,
       },
     ],
     validate: [
-      (testcases) => {
+      (testCases) => {
         var sumPoint = 0;
-        for (const testcase of testcases) {
-          sumPoint += testcase.point;
+        for (const testCase of testCases) {
+          sumPoint += testCase.point;
         }
-        console.log(sumPoint);
         return sumPoint == 100;
       },
       "This exercise must be 100 points",
@@ -41,7 +40,6 @@ const exerciseSchema = new Schema({
   },
   point: {
     type: Number,
-    default: 10,
   },
   creator: {
     type: Schema.Types.ObjectId,
@@ -51,13 +49,23 @@ const exerciseSchema = new Schema({
     type: Date,
     default: Date.now(),
   },
-  expireTime: {
+  expiredTime: {
     type: Date,
   },
   classroom: {
     type: Schema.Types.ObjectId,
     ref: "Classroom",
   },
+});
+
+exerciseSchema.pre("save", function (next) {
+  var sumPoint = 0;
+  for (const testCase of this.testCases) {
+    sumPoint += testCase.point;
+  }
+
+  this.point = sumPoint;
+  next();
 });
 
 export default mongoose.model("Exercise", exerciseSchema);

@@ -53,8 +53,6 @@ app.use("/classrooms/:alias/exercises/:id/results", resultRouter);
 
 app.use("/code", passport.authenticate("jwt"), codeRouter);
 
-// app.use(adminBro.options.rootPath, adminRouter);
-
 // DB config
 export const dbConnection = () => {
   mongoose.connect(DB_CONNECTION, {

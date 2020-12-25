@@ -12,8 +12,18 @@ const resultSchema = new Schema({
     type: Schema.Types.ObjectId,
     ref: "Exercise",
   },
-  testCases: [],
+  testCases: {
+    _id: false,
+    type: [],
+  },
   studentCode: { type: String },
+  submitTime: {
+    type: Date,
+    default: () => {
+      return new Date(Date.now());
+    },
+  },
+  isLate: { type: Boolean, default: false },
   score: {
     type: Number,
     default: 0,

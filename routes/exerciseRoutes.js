@@ -44,11 +44,12 @@ router.post("/create", passport.authorize("teacher"), async (req, res) => {
   const creator = await User.findById(req.user.id);
   // The classroom where exercise is added
   const classroom = await Classroom.findOne({ alias: req.params.alias });
+
   const exercise = new Exercise({
     title: req.body.title,
     content: req.body.content,
     testCases: req.body.testCase,
-    expireDate: req.body.expireDate,
+    expiredTime: req.body.expireTime,
     creator: creator,
     classroom: classroom,
   });

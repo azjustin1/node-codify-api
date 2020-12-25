@@ -6,15 +6,17 @@ import User from "../models/User";
 import Classroom from "../models/Classroom";
 import Attended from "../models/Attended";
 
-import resultRouter from "./resultRoutes";
-
 const router = express.Router();
 
 // Get all the created and joined classroom
 router.get("/", async (req, res) => {
   try {
-    const createdClassroom = await Classroom.find({ teacher: req.user.id });
-    const attendedClassroom = await Attended.find({ student: req.user.id });
+    const createdClassroom = await Classroom.find({
+      teacher: req.user.id,
+    }).populate("teacher");
+    const attendedClassroom = await Attended.find({ student: req.user.id })
+      .populate("student")
+      .populate("classroom");
     res.status(200).send({ createdClassroom, attendedClassroom });
   } catch (err) {
     res.send(err);
@@ -37,7 +39,9 @@ router.get("/:alias/attend", async (req, res) => {
   const classroom = await Classroom.findOne({ alias: req.params.alias });
   const attendedStudents = await Attended.find({
     classroom: classroom,
-  }).populate("student");
+  })
+    .populate("student")
+    .populate("classroom");
   res.status(200).send(attendedStudents);
 });
 

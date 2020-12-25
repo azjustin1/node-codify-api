@@ -40,16 +40,14 @@ router.post("/run", async (req, res) => {
   );
 
   sandBox.run((result) => {
-    let context = [];
     for (var i = 0; i < result.length; i++) {
       if (result[i].type === "error") {
         res.status(200).send(result[i].output);
         break;
       }
 
-      context.push(result[i].output);
       if (i === result.length - 1) {
-        res.status(200).send(context);
+        res.status(200).send(result);
       }
     }
   });
@@ -58,6 +56,7 @@ router.post("/run", async (req, res) => {
 router.post("/submit", async (req, res) => {
   let inputs = [];
   let outputs = [];
+  let result;
 
   const exerciseId = req.body.exerciseId;
   const exercise = await Exercise.findById(exerciseId);
@@ -69,21 +68,6 @@ router.post("/submit", async (req, res) => {
     codeContent: req.body.code,
     codeFileName: "code" + req.user.id,
   };
-
-  let result = await Result.findOne({
-    student: student,
-    exercise: exercise,
-  });
-
-  if (!result) {
-    result = new Result({
-      student: student,
-      exercise: exercise,
-      testCases: exercise.testCases,
-      studentCode: req.body.code,
-    });
-    await result.save();
-  }
 
   for (const [i, testCase] of exercise.testCases.entries()) {
     const input = {
@@ -104,92 +88,135 @@ router.post("/submit", async (req, res) => {
     compiler
   );
 
-  sandBox.run(async (testResults) => {
-    let context = [];
-    for (var i = 0; i < testResults.length; i++) {
-      if (testResults[i].type === "error") {
-        res.send(testResults[i].output);
-        break;
-      } else if (testResults[i].type === "success") {
-        result.testCases.forEach(async (testCase, i) => {
-          if (
-            testCase.input === testResults[i].input &&
-            testCase.output === testResults[i].output &&
-            testCase.timeLimit >= testResults[i].runTime
-          ) {
-            await Result.update(
-              {
-                student: student,
-                exercise: exercise,
-                "testCases.input": testResults[i].input,
-                "testCases.output": testResults[i].output,
-              },
-              {
-                $set: {
-                  "testCases.$.actualOutput": testResults[i].output,
-                  "testCases.$.pass": true,
-                  "testCases.$.message": "Correct",
-                },
-              }
-            );
-          }
-          if (
-            testCase.input === testResults[i].input &&
-            testCase.output !== testResults[i].output &&
-            testCase.timeLimit >= testResults[i].runTime
-          ) {
-            await Result.update(
-              {
-                student: student,
-                exercise: exercise,
-                "testCases.input": testResults[i].input,
-              },
-              {
-                $set: {
-                  "testCases.$.actualOutput": testResults[i].output,
-                  "testCases.$.pass": false,
-                  "testCases.$.message": "Incorrect",
-                },
-              }
-            );
-          }
-          if (
-            testCase.input === testResults[i].input &&
-            testCase.timeLimit < testResults[i].runTime
-          ) {
-            await Result.update(
-              {
-                student: student,
-                exercise: exercise,
-                "testCases.input": testResults[i].input,
-                "testCases.output": testResults[i].output,
-              },
-              {
-                $set: {
-                  "testCases.$.actualOutput": testResults[i].output,
-                  "testCases.$.pass": false,
-                  "testCases.$.message": "Over Time",
-                },
-              }
-            );
-          }
-        });
-      }
+  let context = [];
+  let testResults = [];
 
-      if (i === testResults.length - 1) {
-        const updateResult = await Result.findOne({
-          student: student,
-          exercise: exercise,
+  async function getTestResults(next) {
+    result = await Result.findOneAndUpdate(
+      {
+        student: student,
+        exercise: exercise,
+      },
+      {
+        student: student,
+        exercise: exercise,
+        testCases: exercise.testCases,
+        studentCode: req.body.code,
+      },
+      { new: true, upsert: true, setDefaultsOnInsert: true }
+    );
+
+    const testCases = await Result.findOne({
+      student: student,
+      exercise: exercise,
+    }).select("testCases");
+
+    sandBox.run(async (data) => {
+      testResults = data;
+      for (var i = 0; i < testResults.length; i++) {
+        // Break the loop if the code have compiler
+        if (testResults[i].type === "error") {
+          res.send(testResults[i].output);
+          break;
+        }
+
+        testCases.testCases.forEach(async (testCase) => {
+          // Pass test case
+          if (
+            testResults[i].input === testCase.input &&
+            testResults[i].output === testCase.output &&
+            testResults[i].runTime <= testCase.timeLimit
+          ) {
+            await Result.updateOne(
+              {
+                student: student,
+                exercise: exercise,
+                "testCases.input": testResults[i].input,
+                "testCases.output": testResults[i].output,
+              },
+              {
+                $set: {
+                  "testCases.$.message": "Pass",
+                  "testCases.$.actualOutput": testResults[i].output,
+                  "testCases.$.runTime": testResults[i].runTime,
+                  "testCases.$.pass": true,
+                },
+              }
+            );
+          }
+          // Overtime test case
+          else if (
+            testResults[i].input === testCase.input &&
+            testResults[i].output === testCase.output &&
+            testResults[i].runTime > testCase.timeLimit
+          ) {
+            await Result.updateOne(
+              {
+                student: student,
+                exercise: exercise,
+                "testCases.input": testResults[i].input,
+                "testCases.output": testResults[i].output,
+              },
+              {
+                $set: {
+                  "testCases.$.message": "Over Time",
+                  "testCases.$.actualOutput": testResults[i].output,
+                  "testCases.$.runTime": testResults[i].runTime,
+                  "testCases.$.pass": false,
+                },
+              }
+            );
+          }
+
+          // Fail
+          else if (
+            testResults[i].input === testCase.input &&
+            testResults[i].output !== testCase.output
+          ) {
+            await Result.updateOne(
+              {
+                student: student,
+                exercise: exercise,
+                "testCases.input": testResults[i].input,
+              },
+              {
+                $set: {
+                  "testCases.$.message": "Fail",
+                  "testCases.$.actualOutput": testResults[i].output,
+                  "testCases.$.runTime": testResults[i].runTime,
+                  "testCases.$.pass": false,
+                },
+              }
+            );
+          }
         });
-        const result = {
-          point: updateResult.getTotalPoint(),
-          testCases: updateResult.testCases,
-        };
-        context.push(result);
-        res.send(context);
+        if (i === testResults.length - 1) next();
       }
+    });
+  }
+
+  getTestResults(processSubmit);
+
+  async function processSubmit() {
+    // The duration expired date and submit date
+    const diff = new Date(exercise.expiredTime) - new Date(result.submitTime);
+    console.log(diff);
+    if (diff < 0) {
+      await Result.updateOne(
+        { exercise: exercise, student: student },
+        { isLate: true },
+        { new: true }
+      );
+      res.send("Late");
+    } else {
+      await Result.updateOne(
+        { exercise: exercise, student: student },
+        { isLate: false },
+        { new: true }
+      );
+      res.send("Done");
     }
-  });
+  }
 });
 
 export default router;
