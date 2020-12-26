@@ -42,7 +42,7 @@ router.post("/run", async (req, res) => {
   sandBox.run((result) => {
     for (var i = 0; i < result.length; i++) {
       if (result[i].type === "error") {
-        res.status(200).send(result[i].output);
+        res.status(200).send(result);
         break;
       }
 
@@ -88,7 +88,6 @@ router.post("/submit", async (req, res) => {
     compiler
   );
 
-  let context = [];
   let testResults = [];
 
   async function getTestResults(next) {
@@ -168,7 +167,7 @@ router.post("/submit", async (req, res) => {
             );
           }
 
-          // Fail
+          // Fail test case
           else if (
             testResults[i].input === testCase.input &&
             testResults[i].output !== testCase.output
@@ -207,14 +206,14 @@ router.post("/submit", async (req, res) => {
         { isLate: true },
         { new: true }
       );
-      res.send("Late");
+      res.status(200).send("Late");
     } else {
       await Result.updateOne(
         { exercise: exercise, student: student },
         { isLate: false },
         { new: true }
       );
-      res.send("Done");
+      res.status(200).send("Done");
     }
   }
 });

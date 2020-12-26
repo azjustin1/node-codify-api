@@ -15,7 +15,6 @@ const exerciseSchema = new Schema({
     required: true,
   },
   testCases: {
-    _id: false,
     type: [
       {
         input: { type: String, required: true },

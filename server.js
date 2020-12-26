@@ -2,7 +2,6 @@ import express from "express";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
-import bodyParser, { urlencoded } from "body-parser";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import morgan from "morgan";

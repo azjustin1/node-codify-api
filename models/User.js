@@ -19,12 +19,30 @@ const userSchema = new Schema({
     type: String,
     required: true,
   },
-  name: {
+  firstName: {
     type: String,
-    min: 6,
+    required: true,
   },
+
+  lastName: {
+    type: String,
+    required: true,
+  },
+
+  dateOfBirth: {
+    type: Date,
+    required: true,
+    validate: [
+      (date) => {
+        return new Date(Date.now()) - new Date(date) >= 0;
+      },
+      "Invalid date",
+    ],
+  },
+
   imgUrl: {
     type: String,
+    default: null,
   },
   active: {
     type: Boolean,
@@ -61,18 +79,21 @@ userSchema.methods.Validate = function (obj) {
   const schema = Joi.object().keys({
     email: Joi.string().email().min(6).required(),
     password: Joi.string().min(6).required(),
+    confirmPassword: Joi.string(),
+    firstName: Joi.string().required(),
+    lastName: Joi.string().required(),
+    dateOfBirth: Joi.date().required(),
   });
   const validation = schema.validate(obj);
   return validation;
 };
 
-userSchema.methods.comparePassword = function (confirmPassword, next) {
-  bcrypt.compare(confirmPassword, this.password, function (err, isMatch) {
-    if (err) {
-      next(null, false);
-    }
-    return next(null, isMatch);
-  });
+userSchema.methods.comparePassword = async function (inputPassword) {
+  const isMatch = await bcrypt.compare(inputPassword, this.password);
+  if (!isMatch) {
+    return false;
+  }
+  return true;
 };
 
 userSchema.methods.generateAccessToken = function () {

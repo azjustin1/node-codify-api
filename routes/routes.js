@@ -46,10 +46,12 @@ router.post("/signin", (req, res, next) => {
     },
     async (err, user, info) => {
       if (err || !user) {
+        console.log(user);
+        console.log(err);
         return res.status(422).send(info);
       }
       req.login(user, { session: false }, (err) => {
-        if (err) res.status(403);
+        if (err) res.status(403).send(err);
         // Receive access token from passport middleware and send to client
         return res.status(200).send(info);
       });

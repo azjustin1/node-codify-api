@@ -1,6 +1,10 @@
 import express from "express";
 import cloudinary from "cloudinary";
+import dotenv from "dotenv";
+import multer from "multer";
 import fs from "fs";
+
+dotenv.config();
 const router = express.Router();
 
 // Models
@@ -32,7 +36,38 @@ router.put("/change-password", async (req, res) => {
   });
 });
 
-router.post("/attend-classroom", (req, res) => {});
+const storage = multer.diskStorage({}); // This route will upload file to cloudinary
+router.put("/change-avatar", (req, res, next) => {
+  const upload = multer({ storage }).single("image");
+  upload(req, res, function (err) {
+    if (err) {
+      return res.send(err);
+    }
+    // SEND FILE TO CLOUDINARY
+    cloudinary.v2.config({
+      cloud_name: "gymmerify",
+      api_key: process.env.CLOUDINARY_KEY,
+      api_secret: process.env.CLOUDINARY_SECRET,
+    });
+
+    const path = req.file.path;
+
+    cloudinary.uploader.upload(path, async (image) => {
+      if (!image) {
+        return res.status(400).send("Upload failed");
+      }
+      // remove file from server if don't remove it will save image in server folder
+      fs.unlinkSync(path);
+      await User.findOneAndUpdate(
+        { _id: req.user.id },
+        {
+          imgUrl: image.url,
+        }
+      );
+      return res.status(200).send("Upload successfully");
+    });
+  });
+});
 
 router.delete("/", (req, res) => {});
 

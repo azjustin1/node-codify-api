@@ -115,17 +115,12 @@ sandBox.prototype.execute = async function (success) {
         sandbox.outputs[i] +
         i,
       async (err, stdout, stderr) => {
-        // this.cleanFile();
-
+        if (err) return success(err);
         if (stderr) {
           await outputs.push({ type: "error", output: stderr.trim() });
         } else if (stdout) {
           const result = stdout.trim().split("\n");
-          const output = {
-            input: input.inputContent,
-            output: result[0],
-            runTime: parseInt(result[1]),
-          };
+
           await outputs.push({
             type: "success",
             input: input.inputContent,

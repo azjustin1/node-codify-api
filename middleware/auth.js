@@ -105,12 +105,12 @@ passport.use(
       // Check confirm password
       if (req.body.password != req.body.confirmPassword) {
         return done(null, false, {
-          message: "Password and confirm password does not match",
+          message: "Password and confirm password are not match",
         });
       }
 
       try {
-        const newUser = { email, password };
+        const newUser = req.body;
         // Save the information provided by user to the database
         const user = new User(newUser);
 
@@ -172,34 +172,22 @@ passport.use(
     },
     async (email, password, done) => {
       try {
-        const userInput = new User({ email, password });
-        const validation = await userInput.Validate({ email, password });
-        // Check the email and password input
-        if (validation.error) {
-          return done(null, false, {
-            message: validation.error.details[0].message,
-          });
+        const user = await User.findOne({ email: email });
+        if (!user) return done(null, false, { message: "User not found" });
+        //Validate password and make sure it matches with the corresponding hash stored in the database
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+          return done(null, false, { message: "Wrong email or password" });
         }
-
-        // If the input is valid
-        await User.findOne({ email: email }, async (err, user) => {
-          if (err) return done(null, false, { message: "User not found" });
-          //Validate password and make sure it matches with the corresponding hash stored in the database
-          await user.comparePassword(password, (err, isMatch) => {
-            if (err) {
-              return done(null, false, { message: err.message });
-            }
-            if (!isMatch) {
-              return done(null, false, { message: "Wrong email or password" });
-            }
-            if (!user.active)
-              return done(null, false, { message: "Your account is inactive" });
-
-            // Generate access token and send back to client
-            const accessToken = user.generateAccessToken();
-            return done(null, user, { accessToken: accessToken });
+        // Check user active status
+        if (!user.active)
+          return done(null, false, {
+            message:
+              "Your account is inactive. Please check your email to activate your account",
           });
-        });
+        // Create user access token
+        const accessToken = user.generateAccessToken();
+        return done(null, user, { accessToken: accessToken });
       } catch (error) {
         return done(null, false, { message: error });
       }
