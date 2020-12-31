@@ -15,21 +15,21 @@
   "license": "ISC",
   "dependencies": {
     "bcrypt": "^5.0.0",
+    "bufferutil": "^4.0.2",
     "chai": "^4.2.0",
     "chai-http": "^4.3.0",
     "cloudinary": "^1.23.0",
-    "connect-flash": "^0.1.1",
     "cookie-parser": "^1.4.5",
     "core-js": "^3.8.1",
     "cors": "^2.8.5",
     "dotenv": "^8.2.0",
+    "eiows": "^3.4.1",
     "ejs": "^3.1.5",
     "esm": "^3.2.25",
     "express": "^4.17.1",
     "express-formidable": "^1.2.0",
     "express-session": "^1.17.1",
     "fs": "^0.0.1-security",
-    "global": "^4.4.0",
     "helmet": "^4.2.0",
     "http": "^0.0.1-security",
     "https": "^1.0.0",
@@ -46,10 +46,9 @@
     "passport": "^0.4.1",
     "passport-jwt": "^4.0.0",
     "passport-local": "^1.0.0",
-    "react": "^17.0.1",
     "slugify": "^1.4.6",
-    "socket.io": "^3.0.1",
+    "socket.io": "^2.3.0",
     "supertest": "^6.0.1",
-    "winston": "^3.3.3"
+    "utf-8-validate": "^5.0.3"
   }
 }

@@ -199,22 +199,31 @@ router.post("/submit", async (req, res) => {
   async function processSubmit() {
     // The duration expired date and submit date
     const diff = new Date(exercise.expiredTime) - new Date(result.submitTime);
-    console.log(diff);
     if (diff < 0) {
       await Result.updateOne(
         { exercise: exercise, student: student },
         { isLate: true },
         { new: true }
       );
-      res.status(200).send("Late");
     } else {
       await Result.updateOne(
         { exercise: exercise, student: student },
         { isLate: false },
         { new: true }
       );
-      res.status(200).send("Done");
     }
+
+    const finalResult = await Result.findOne({
+      exercise: exercise,
+      student: student,
+    });
+
+    const context = {
+      point: finalResult.getTotalPoint(),
+      testCases: finalResult.testCases,
+    };
+
+    res.status(200).send(context);
   }
 });
 

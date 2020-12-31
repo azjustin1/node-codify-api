@@ -11,8 +11,6 @@ import auth from "../middleware/auth";
 import User from "../models/User";
 import Classroom from "../models/Classroom";
 
-import resultRouter from "./resultRoutes";
-
 dotenv.config();
 
 const router = express.Router();
