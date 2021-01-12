@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import Joi from "joi";
 import JWT from "jsonwebtoken";
 import dotenv from "dotenv";
-import transporter from "../config/emailConfig";
+import transporter from "../config/emailConfigs";
 
 dotenv.config();
 

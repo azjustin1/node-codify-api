@@ -2,7 +2,7 @@ import express from "express";
 
 // Models
 import Result from "../models/Result";
-import Classroom from "../models/Classroom";
+
 import Exercise from "../models/Exercise";
 
 const router = express.Router({ mergeParams: true });

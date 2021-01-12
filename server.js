@@ -1,14 +1,15 @@
 import express from "express";
-import socket from "socket.io";
+import bodyParser from "body-parser";
 import socketIO from "./middleware/socketIO";
 import ejs from "ejs";
-import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import session from "express-session";
 import morgan from "morgan";
 import passport from "passport";
+import adminRouter, { adminBro } from "./config/admin";
+import mongoDbConnection from "./config/mongodbConfigs";
 
 // // API server config
 dotenv.config();
@@ -25,7 +26,6 @@ app.use(passport.session());
 
 // Middleware
 app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors());
 app.use(morgan("tiny"));
@@ -33,12 +33,15 @@ app.set("views", __dirname + "/public");
 app.engine("html", ejs.renderFile);
 
 // Routes
+
 import router from "./routes/routes";
 import userRouter from "./routes/userRoutes";
 import classroomRouter from "./routes/classroomRoutes";
 import exerciseRouter from "./routes/exerciseRoutes";
 import resultRouter from "./routes/resultRoutes";
 import codeRouter from "./routes/codeRoutes";
+
+app.use("/admin", adminRouter);
 
 // Any user can access to this route
 app.use(router);
@@ -54,23 +57,8 @@ app.use("/classrooms/:alias/exercises/:id/results", resultRouter);
 
 app.use("/code", passport.authenticate("jwt"), codeRouter);
 
-// DB config
-export const dbConnection = () => {
-  mongoose.connect(DB_CONNECTION, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-    useCreateIndex: true,
-    useFindAndModify: true,
-  });
-
-  var db = mongoose.connection;
-  db.once("open", () => {
-    console.log(`Database is connecting ${DB_CONNECTION}`);
-  });
-};
-
 const runServer = async () => {
-  dbConnection();
+  mongoDbConnection(DB_CONNECTION);
   // Listen
   const server = await app.listen(PORT, () => {
     console.log(`Server is running on server http://localhost:${PORT}`);

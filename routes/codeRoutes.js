@@ -1,4 +1,5 @@
 import express from "express";
+import ExpressBrute from "express-brute";
 import SandBox from "../DockerSandbox/DockerSandbox";
 
 // Models
@@ -10,7 +11,10 @@ const router = express.Router();
 
 let folder = "temp";
 
-router.post("/run", async (req, res) => {
+var store = new ExpressBrute.MemoryStore();
+var bruteForce = new ExpressBrute(store);
+
+router.post("/run", bruteForce.prevent, async (req, res) => {
   let inputs = [];
   let outputs = [];
   const language = req.body.language;
@@ -53,7 +57,7 @@ router.post("/run", async (req, res) => {
   });
 });
 
-router.post("/submit", async (req, res) => {
+router.post("/submit", bruteForce.prevent, async (req, res) => {
   let inputs = [];
   let outputs = [];
   let result;
@@ -194,6 +198,7 @@ router.post("/submit", async (req, res) => {
     });
   }
 
+  // Get all the output from sandbox
   getTestResults(processSubmit);
 
   async function processSubmit() {
