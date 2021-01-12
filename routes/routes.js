@@ -44,8 +44,6 @@ router.post("/signin", (req, res, next) => {
     },
     async (err, user, info) => {
       if (err || !user) {
-        console.log(user);
-        console.log(err);
         return res.status(422).send(info);
       }
       req.login(user, { session: false }, (err) => {
