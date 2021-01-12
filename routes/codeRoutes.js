@@ -223,6 +223,9 @@ router.post("/submit", bruteForce.prevent, async (req, res) => {
       student: student,
     });
 
+    finalResult.score = finalResult.getTotalPoint();
+    await finalResult.save();
+
     const context = {
       point: finalResult.getTotalPoint(),
       testCases: finalResult.testCases,

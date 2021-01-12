@@ -42,6 +42,7 @@ import resultRouter from "./routes/resultRoutes";
 import codeRouter from "./routes/codeRoutes";
 
 app.use("/admin", adminRouter);
+app.use(bodyParser.urlencoded());
 
 // Any user can access to this route
 app.use(router);
