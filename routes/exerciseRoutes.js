@@ -33,7 +33,7 @@ router.get("/", async (req, res) => {
       exercise: exercise._id,
     });
     console.log(result);
-    if (!result) {
+    if (result) {
       context.notDoneExercises.push(exercise);
     } else if (result) {
       if (result.submitTime > exercise.expiredTime) {
