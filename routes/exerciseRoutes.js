@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
   let context = {
     notDoneExercises: [],
     doneExercises: [],
-    lateSubmits: [],
+    lateSubmitExercises: [],
   };
   // Get the classroom to find all the exercise in this classroom
   const classroom = await Classroom.findOne({ alias: req.params.alias });
@@ -28,14 +28,14 @@ router.get("/", async (req, res) => {
   });
 
   for (const exercise of exercises) {
-    const result = await Result.find({
+    const result = await Result.findOne({
       student: req.user.id,
       exercise: exercise._id,
     });
-    console.log(result);
-    if (result) {
+
+    if (result.length == 0) {
       context.notDoneExercises.push(exercise);
-    } else if (result) {
+    } else {
       if (result.submitTime > exercise.expiredTime) {
         context.lateSubmits.push(exercise);
       } else {
