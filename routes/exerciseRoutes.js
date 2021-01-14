@@ -32,7 +32,7 @@ router.get("/", async (req, res) => {
       student: req.user.id,
       exercise: exercise._id,
     });
-
+    console.log(result);
     if (!result) {
       context.notDoneExercises.push(exercise);
     } else if (result) {
