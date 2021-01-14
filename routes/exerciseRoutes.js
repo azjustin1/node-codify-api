@@ -7,18 +7,43 @@ const router = express.Router({ mergeParams: true });
 import User from "../models/User";
 import Classroom from "../models/Classroom";
 import Exercise from "../models/Exercise";
+import Result from "../models/Result";
 
 // Get all exercises in class
 router.get("/", async (req, res) => {
+  let context = {
+    notDoneExercises: [],
+    doneExercises: [],
+    lateSubmits: [],
+  };
   // Get the classroom to find all the exercise in this classroom
   const classroom = await Classroom.findOne({ alias: req.params.alias });
+
   if (!classroom) {
     return res.status(404).send({ message: "Not Found" });
   }
+
   const exercises = await Exercise.find({
     classroom: classroom._id,
   });
-  res.status(200).send(exercises);
+
+  for (const exercise of exercises) {
+    const result = await Result.find({
+      student: req.user.id,
+      exercise: exercise._id,
+    });
+
+    if (!result) {
+      context.notDoneExercises.push(exercise);
+    } else if (result) {
+      if (result.submitTime > exercise.expiredTime) {
+        context.lateSubmits.push(exercise);
+      } else {
+        context.doneExercises.push(exercise);
+      }
+    }
+  }
+  res.status(200).send(context);
 });
 
 // Get exercise by Id

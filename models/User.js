@@ -101,6 +101,10 @@ userSchema.methods.generateAccessToken = function () {
   const payload = {
     id: this._id,
     email: this.email,
+    firstName: this.firstName,
+    lastName: this.lastName,
+    dateOfBirth: this.dateOfBirth,
+    imgUrl: this.imgUrl,
     active: this.active,
     role: this.role,
   };
