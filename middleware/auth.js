@@ -171,8 +171,9 @@ passport.use(
       passwordField: "password",
     },
     async (email, password, done) => {
+      let user;
       try {
-        const user = await User.findOne({ email: email });
+        user = await User.findOne({ email: email });
         if (!user) return done(null, false, { message: "User not found" });
         //Validate password and make sure it matches with the corresponding hash stored in the database
         const isMatch = await user.comparePassword(password);
@@ -187,9 +188,10 @@ passport.use(
           });
         // Create user access token
         const accessToken = user.generateAccessToken();
-        return done(null, user, { accessToken: accessToken });
+        user = await User.findOne({ email: email }).select("-password");
+        return done(null, user, { accessToken: accessToken, user: user });
       } catch (error) {
-        return done(null, false, { message: error });
+        return done(null, false, { message: error.message });
       }
     }
   )

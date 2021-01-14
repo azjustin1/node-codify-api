@@ -8,16 +8,10 @@ import Exercise from "../models/Exercise";
 const router = express.Router({ mergeParams: true });
 
 router.get("/", async (req, res) => {
-  const exercise = await await Exercise.find({
-    _id: req.params.id,
-  });
-
-  if (!exercise) {
-    return res.status(404).send({ message: "Not Found" });
-  }
+  const exerciseId = req.params.id;
 
   const results = await Result.find({
-    exercise: exercise,
+    exercise: exerciseId,
   }).populate("student", "-password");
 
   res.status(200).send(results);
