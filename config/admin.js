@@ -21,6 +21,7 @@ const AdminBroOptions = {
       options: {
         navigation: { name: "User", icon: "Home" },
         listProperties: ["email", "active", "role"],
+        editProperties: ["role", "active"],
         properties: {
           email: {
             isVisible: true,
@@ -32,20 +33,6 @@ const AdminBroOptions = {
         },
         actions: {
           new: {
-            before: async (request) => {
-              if (request.payload.password) {
-                request.payload = {
-                  ...request.payload,
-                  password: await bcrypt.hash(
-                    request.payload.password,
-                    await bcrypt.genSalt(10)
-                  ),
-                };
-              }
-              return request;
-            },
-          },
-          edit: {
             before: async (request) => {
               if (request.payload.password) {
                 request.payload = {
