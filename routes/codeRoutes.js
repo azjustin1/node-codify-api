@@ -1,22 +1,16 @@
 import express from "express";
-import ExpressBrute from "express-brute";
 import SandBox from "../DockerSandbox/DockerSandbox";
 
 // Models
 import User from "../models/User";
 import Exercise from "../models/Exercise";
 import Result from "../models/Result";
-import Classroom from "../models/Classroom";
-import Attended from "../models/Attended";
 
 const router = express.Router();
 
 let folder = "temp";
 
-var store = new ExpressBrute.MemoryStore();
-var bruteForce = new ExpressBrute(store);
-
-router.post("/run", bruteForce.prevent, async (req, res) => {
+router.post("/run", async (req, res) => {
   let inputs = [];
   let outputs = [];
   const language = req.body.language;
@@ -59,7 +53,7 @@ router.post("/run", bruteForce.prevent, async (req, res) => {
   });
 });
 
-router.post("/submit", bruteForce.prevent, async (req, res) => {
+router.post("/submit", async (req, res) => {
   let inputs = [];
   let outputs = [];
   let result;
@@ -68,16 +62,6 @@ router.post("/submit", bruteForce.prevent, async (req, res) => {
   const exercise = await Exercise.findById(exerciseId);
 
   const student = await User.findById(req.user.id);
-
-  const attended = await Attended.findOne({
-    student: req.user.id,
-    classroom: exercise.classroom,
-  });
-
-  if (!attended) {
-    return res.status(403).send({ message: "Unauthorized" });
-  }
-
   const language = req.body.language;
   const compiler = req.body.compiler;
   const code = {
@@ -131,6 +115,31 @@ router.post("/submit", bruteForce.prevent, async (req, res) => {
       for (var i = 0; i < testResults.length; i++) {
         // Break the loop if the code have compiler
         if (testResults[i].type === "error") {
+          const diff = new Date(exercise.expiredTime) - new Date(result.submitTime);
+
+          if (diff < 0) {
+            await Result.updateOne(
+              { exercise: exercise, student: student },
+              { isLate: true },
+              { new: true }
+            );
+
+          } else {
+            await Result.updateOne(
+              { exercise: exercise, student: student },
+              { isLate: false },
+              { new: true }
+            );
+
+          }
+
+          const finalResult = await Result.findOne({
+            exercise: exercise,
+            student: student,
+          });
+
+          finalResult.score = finalResult.getTotalPoint();
+          await finalResult.save();
           res.send(testResults[i].output);
           break;
         }
@@ -210,24 +219,26 @@ router.post("/submit", bruteForce.prevent, async (req, res) => {
     });
   }
 
-  // Get all the output from sandbox
   getTestResults(processSubmit);
 
   async function processSubmit() {
     // The duration expired date and submit date
     const diff = new Date(exercise.expiredTime) - new Date(result.submitTime);
+
     if (diff < 0) {
       await Result.updateOne(
         { exercise: exercise, student: student },
         { isLate: true },
         { new: true }
       );
+
     } else {
       await Result.updateOne(
         { exercise: exercise, student: student },
         { isLate: false },
         { new: true }
       );
+
     }
 
     const finalResult = await Result.findOne({
