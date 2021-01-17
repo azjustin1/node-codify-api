@@ -40,7 +40,7 @@ router.get("/exercises/todo", async (req, res) => {
   });
 
   for (const attend of attendedClassrooms) {
-    const exercises = await Exercise.find({ classroom: attend.classroom });
+    const exercises = await Exercise.find({ classroom: attend.classroom }).populate("classroom");;
     for (const exercise of exercises) {
       const result = await Result.findOne({
         student: req.user.id,
