@@ -8,7 +8,6 @@ import cookieParser from "cookie-parser";
 import session from "express-session";
 import morgan from "morgan";
 import passport from "passport";
-import adminRouter, { adminBro } from "./config/admin";
 import mongoDbConnection from "./config/mongodbConfigs";
 
 // // API server config
@@ -33,7 +32,7 @@ app.set("views", __dirname + "/public");
 app.engine("html", ejs.renderFile);
 
 // Routes
-
+import adminRouter from "./config/admin";
 import router from "./routes/routes";
 import userRouter from "./routes/userRoutes";
 import classroomRouter from "./routes/classroomRoutes";

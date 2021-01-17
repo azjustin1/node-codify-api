@@ -17,7 +17,7 @@ router.get("/", async (req, res) => {
   res.status(200).send(results);
 });
 
-router.get("/:exerciseId", async (req, res) => {
+router.get("/:resultId", async (req, res) => {
   const exercise = await await Exercise.find({
     _id: req.params.id,
   });

@@ -6,6 +6,8 @@ import SandBox from "../DockerSandbox/DockerSandbox";
 import User from "../models/User";
 import Exercise from "../models/Exercise";
 import Result from "../models/Result";
+import Classroom from "../models/Classroom";
+import Attended from "../models/Attended";
 
 const router = express.Router();
 
@@ -66,6 +68,16 @@ router.post("/submit", bruteForce.prevent, async (req, res) => {
   const exercise = await Exercise.findById(exerciseId);
 
   const student = await User.findById(req.user.id);
+
+  const attended = await Attended.findOne({
+    student: req.user.id,
+    classroom: exercise.classroom,
+  });
+
+  if (!attended) {
+    return res.status(403).send({ message: "Unauthorized" });
+  }
+
   const language = req.body.language;
   const compiler = req.body.compiler;
   const code = {

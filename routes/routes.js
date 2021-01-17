@@ -19,6 +19,18 @@ router.get("/", (req, res) => {
   res.status(200).send({ message: "express is up" });
 });
 
+router.get("/authenticate", async (req, res) => {
+  const accessToken = await JWT.verify(
+    req.headers.authorization.replace("Bearer ", ""),
+    process.env.SECRET_TOKEN
+  );
+  if (!accessToken) {
+    return res.status(401).send({ message: "Unauthorized" });
+  }
+
+  res.status(200).send(accessToken.payload);
+});
+
 router.post("/signup", (req, res, next) => {
   passport.authenticate(
     "signup",
@@ -65,7 +77,9 @@ router.get("/activate/:activationToken", (req, res) => {
     if (err) return res.status(401);
     user.active = activationToken.active;
     user.save();
-    res.status(200).send("Your account has been activated successfully");
+    res
+      .status(200)
+      .send({ message: "Your account has been activated successfully" });
   });
 });
 

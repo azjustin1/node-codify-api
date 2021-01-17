@@ -5,6 +5,8 @@ import passport from "passport";
 import User from "../models/User";
 import Classroom from "../models/Classroom";
 import Attended from "../models/Attended";
+import Exercise from "../models/Exercise";
+import Result from "../models/Result";
 
 const router = express.Router();
 
@@ -23,12 +25,57 @@ router.get("/", async (req, res) => {
   }
 });
 
+router.get("/exercises/todo", async (req, res) => {
+  let context = {
+    notDoneExercises: [],
+    doneExercises: [],
+    lateSubmitExercises: [],
+  };
+
+  const attendedClassrooms = await Attended.find({
+    student: req.user.id,
+  });
+
+  for (const attend of attendedClassrooms) {
+    const exercises = await Exercise.find({ classroom: attend.classroom });
+    for (const exercise of exercises) {
+      const result = await Result.findOne({
+        student: req.user.id,
+        exercise: exercise._id,
+      });
+
+      if (!result) {
+        context.notDoneExercises.push(exercise);
+      } else {
+        if (result.submitTime > exercise.expiredTime) {
+          context.lateSubmitExercises.push(exercise);
+        } else {
+          context.doneExercises.push(exercise);
+        }
+      }
+    }
+  }
+
+  res.status(200).send(context);
+});
+
 // This route to get classroom information by their slug title
 // Ex: This is title ---> this-is-title
 router.get("/:alias", async (req, res) => {
   const classroom = await Classroom.findOne({
     alias: req.params.alias,
   }).populate("teacher", "-password");
+
+  if (classroom.teacher._id != req.user.id) {
+    const attended = await Attended.findOne({
+      student: req.user.id,
+      classroom: classroom,
+    });
+
+    if (!attended) {
+      return res.status(403).send({ message: "Unauthorized" });
+    }
+  }
 
   if (!classroom) return res.status(404).send({ message: "Not found" });
 
@@ -49,20 +96,32 @@ router.get("/:alias/attend", async (req, res) => {
 router.post("/attend", async (req, res) => {
   const joinId = req.body.joinId;
 
-  const classroom = await Classroom.findOne({ joinId: joinId });
+  const classroom = await Classroom.findOne({ joinId: joinId }).populate({
+    path: "teacher",
+    select: { password: 0 },
+  });
 
   if (!classroom) {
     return res.status(404).send("Not found");
   }
   // Get the student want to attend to add to the classroom students[]
-  const student = await User.findById(req.user.id);
+  const student = await User.findById(req.user.id).select("-password");
+
+  console.log(req.user.id == classroom.teacher._id);
+
+  if (req.user.id == classroom.teacher._id) {
+    return res
+      .status(403)
+      .send({ message: "You are teacher of this classroom" });
+  }
+
   let attended = await Attended.findOne({
     classroom: classroom,
     student: student,
   });
 
   if (attended) {
-    return res.status(501).send("Already attended!");
+    return res.status(501).send({ message: "Already attended!" });
   }
 
   attended = new Attended({

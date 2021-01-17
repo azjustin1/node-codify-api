@@ -8,15 +8,10 @@ import User from "../models/User";
 import Classroom from "../models/Classroom";
 import Exercise from "../models/Exercise";
 import Result from "../models/Result";
+import Attended from "../models/Attended";
 
 // Get all exercises in class
 router.get("/", async (req, res) => {
-  let context = {
-    notDoneExercises: [],
-    doneExercises: [],
-    lateSubmitExercises: [],
-  };
-  // Get the classroom to find all the exercise in this classroom
   const classroom = await Classroom.findOne({ alias: req.params.alias });
 
   if (!classroom) {
@@ -27,23 +22,7 @@ router.get("/", async (req, res) => {
     classroom: classroom._id,
   });
 
-  for (const exercise of exercises) {
-    const result = await Result.findOne({
-      student: req.user.id,
-      exercise: exercise._id,
-    });
-
-    if (!result) {
-      context.notDoneExercises.push(exercise);
-    } else {
-      if (result.submitTime > exercise.expiredTime) {
-        context.lateSubmits.push(exercise);
-      } else {
-        context.doneExercises.push(exercise);
-      }
-    }
-  }
-  res.status(200).send(context);
+  res.status(200).send(exercises);
 });
 
 // Get exercise by Id
@@ -54,6 +33,17 @@ router.get("/:id", async (req, res) => {
     _id: req.params.id,
     classroom: classroom,
   });
+
+  if (classroom.teacher != req.user.id) {
+    const attended = await Attended.findOne({
+      student: req.user.id,
+      classroom: classroom,
+    });
+
+    if (!attended) {
+      return res.status(403).send({ message: "Unauthorized" });
+    }
+  }
 
   if (!exercise || !classroom) {
     return res.status(404).send({ message: "Not found" });
