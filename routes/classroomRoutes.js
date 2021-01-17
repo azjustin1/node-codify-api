@@ -40,20 +40,21 @@ router.get("/exercises/todo", async (req, res) => {
   });
 
   for (const attend of attendedClassrooms) {
-    const exercises = await Exercise.find({ classroom: attend.classroom }).populate("classroom");;
+    var curr = new Date;
+    const exercises = await Exercise.find({ classroom: attend.classroom }).populate("classroom");
     for (const exercise of exercises) {
       const result = await Result.findOne({
         student: req.user.id,
         exercise: exercise._id,
       });
 
-      if (!result) {
-        context.notDoneExercises.push(exercise);
+      if (result) {
+        context.doneExercises.push(exercise);
       } else {
-        if (result.submitTime > exercise.expiredTime) {
+        if (curr > exercise.expiredTime) {
           context.lateSubmitExercises.push(exercise);
         } else {
-          context.doneExercises.push(exercise);
+          context.notDoneExercises.push(exercise);
         }
       }
     }
