@@ -18,7 +18,10 @@ router.get("/", async (req, res) => {
     }).populate("teacher");
     const attendedClassroom = await Attended.find({ student: req.user.id })
       .populate("student")
-      .populate("classroom");
+      .populate({
+        path: "classroom",
+        populate: { path: "teacher", select: { password: 0 } },
+      });
     res.status(200).send({ createdClassroom, attendedClassroom });
   } catch (err) {
     res.send(err);
