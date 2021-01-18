@@ -32,7 +32,7 @@ router.get("/:id", async (req, res) => {
   const exercise = await Exercise.findOne({
     _id: req.params.id,
     classroom: classroom,
-  });
+  }).populate("classroom").populate("creator");
 
   if (classroom.teacher != req.user.id) {
     const attended = await Attended.findOne({
