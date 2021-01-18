@@ -23,12 +23,11 @@ const socketIO = (server) => {
     });
 
     // Receive comment from user
-    socket.on("comment", async ({ room, user, comment }) => {
-      console.log("new post");
+    socket.on("comment", async ({ room, user, content }) => {
       const newComment = new Comment({
         room: room,
         user: user,
-        content: comment,
+        content: content,
       });
       await newComment.save();
 
