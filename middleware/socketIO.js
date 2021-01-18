@@ -5,7 +5,7 @@ import socket from "socket.io";
 import Comment from "../models/Comment";
 
 const socketIO = (server) => {
-  const io = socket(server, { wsEngine: "eiows" });
+  const io = socket(server);
   io.on("connection", (socket) => {
     console.log(`${socket.id} connected`);
     socket.on("disconnect", () => console.log(`Disconnected: ${socket.id}`));
