@@ -189,7 +189,10 @@ passport.use(
         // Create user access token
         const accessToken = user.generateAccessToken();
 
-        return done(null, user, { accessToken: accessToken });
+        return done(null, user, {
+          accessToken: accessToken,
+          user: await User.findOne({ email: email }).select("-password"),
+        });
       } catch (error) {
         return done(null, false, { message: error.message });
       }
