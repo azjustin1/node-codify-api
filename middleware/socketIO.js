@@ -30,7 +30,7 @@ const socketIO = (server) => {
         user: user,
         content: comment,
       });
-      // await newComment.save();
+      await newComment.save();
 
       // Send back to all the client in the room
       socket.broadcast

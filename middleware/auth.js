@@ -191,7 +191,6 @@ passport.use(
 
         return done(null, user, {
           accessToken: accessToken,
-          user: await User.findOne({ email: email }).select("-password"),
         });
       } catch (error) {
         return done(null, false, { message: error.message });
