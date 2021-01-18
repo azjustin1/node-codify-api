@@ -98,6 +98,20 @@ router.get("/:alias/attend", async (req, res) => {
   res.status(200).send(attendedStudents);
 });
 
+router.post("/:alias/leave", async (req, res) => {
+  const classroom = await Classroom.findOne({ alias: req.params.alias });
+  try {
+    await Attended.findOneAndDelete({
+      classroom: classroom,
+      student: req.user.id,
+    });
+
+    res.status(200).send({ message: "Leave successfully" });
+  } catch (error) {
+    res.status(200).send(error.message);
+  }
+});
+
 // Attend to new class by classroom join id
 router.post("/attend", async (req, res) => {
   const joinId = req.body.joinId;
@@ -195,10 +209,14 @@ router.delete("/:alias", passport.authorize("teacher"), async (req, res) => {
     return res.status(404).send({ message: "Not Found" });
   }
 
-  const deleteAttendedClassrooms = await AttendedClassroom.deleteMany({
-    classroom: deleteClassroom._id,
-  });
-  return res.status(200).send({ message: "Delete successfully" });
+  try {
+    await Attended.deleteMany({
+      classroom: deleteClassroom._id,
+    });
+    return res.status(200).send({ message: "Delete successfully" });
+  } catch (error) {
+    res.status(501).send(error.message);
+  }
 });
 
 export default router;
