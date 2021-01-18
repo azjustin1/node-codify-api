@@ -40,8 +40,10 @@ router.get("/exercises/todo", async (req, res) => {
   });
 
   for (const attend of attendedClassrooms) {
-    var curr = new Date;
-    const exercises = await Exercise.find({ classroom: attend.classroom }).populate("classroom");
+    var curr = new Date();
+    const exercises = await Exercise.find({
+      classroom: attend.classroom,
+    }).populate("classroom");
     for (const exercise of exercises) {
       const result = await Result.findOne({
         student: req.user.id,
@@ -70,6 +72,8 @@ router.get("/:alias", async (req, res) => {
     alias: req.params.alias,
   }).populate("teacher", "-password");
 
+  if (!classroom) return res.status(404).send({ message: "Not found" });
+
   if (classroom.teacher._id != req.user.id) {
     const attended = await Attended.findOne({
       student: req.user.id,
@@ -80,8 +84,6 @@ router.get("/:alias", async (req, res) => {
       return res.status(403).send({ message: "Unauthorized" });
     }
   }
-
-  if (!classroom) return res.status(404).send({ message: "Not found" });
 
   return res.status(200).json(classroom);
 });

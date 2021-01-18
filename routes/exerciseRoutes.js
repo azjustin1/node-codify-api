@@ -84,6 +84,23 @@ router.post("/create", passport.authorize("teacher"), async (req, res) => {
  * @param testCase[]
  */
 router.put("/:id", passport.authorize("teacher"), async (req, res) => {
+  const classroom = await Classroom.findOne({
+    alias: req.params.alias,
+  }).populate("teacher", "-password");
+
+  if (!classroom) return res.status(404).send({ message: "Not found" });
+
+  if (classroom.teacher._id != req.user.id) {
+    const attended = await Attended.findOne({
+      student: req.user.id,
+      classroom: classroom,
+    });
+
+    if (!attended) {
+      return res.status(403).send({ message: "Unauthorized" });
+    }
+  }
+
   try {
     const updateExercise = await Exercise.findByIdAndUpdate(
       req.params.id,
