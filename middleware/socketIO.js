@@ -5,7 +5,7 @@ import socket from "socket.io";
 import Comment from "../models/Comment";
 
 const socketIO = (server) => {
-  const io = socket(server, { wsEngine: "eiows" });
+  const io = socket(server);
   io.on("connection", (socket) => {
     console.log(`${socket.id} connected`);
     socket.on("disconnect", () => console.log(`Disconnected: ${socket.id}`));
@@ -23,12 +23,11 @@ const socketIO = (server) => {
     });
 
     // Receive comment from user
-    socket.on("comment", async ({ room, user, comment }) => {
-      console.log("new post");
+    socket.on("comment", async ({ room, user, content }) => {
       const newComment = new Comment({
         room: room,
         user: user,
-        content: comment,
+        content: content,
       });
       await newComment.save();
 
