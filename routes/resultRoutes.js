@@ -14,7 +14,7 @@ router.get("/", async (req, res) => {
 
   const results = await Result.find({
     exercise: exerciseId,
-  }).populate("student", "-password");
+  }).populate("exercise").populate("student", "-password");
 
   res.status(200).send(results);
 });
