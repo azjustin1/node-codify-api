@@ -127,8 +127,6 @@ router.post("/attend", async (req, res) => {
   // Get the student want to attend to add to the classroom students[]
   const student = await User.findById(req.user.id).select("-password");
 
-  console.log(req.user.id == classroom.teacher._id);
-
   if (req.user.id == classroom.teacher._id) {
     return res
       .status(403)
