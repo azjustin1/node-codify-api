@@ -120,7 +120,6 @@ sandBox.prototype.execute = async function (success) {
           await outputs.push({ type: "error", output: stderr.trim() });
         } else if (stdout) {
           const result = stdout.trim().split("\n");
-
           await outputs.push({
             type: "success",
             input: input.inputContent,

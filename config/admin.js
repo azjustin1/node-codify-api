@@ -15,6 +15,11 @@ const canModifyUsers = ({ currentAdmin }) =>
   currentAdmin && currentAdmin.role === "admin";
 
 const AdminBroOptions = {
+  branding: {
+    companyName: "Codify",
+    softwareBrothers: false,
+    logo: false,
+  },
   resources: [
     {
       resource: User,
@@ -71,13 +76,8 @@ const AdminBroOptions = {
       },
     },
   },
-  branding: {
-    companyName: "Codify",
-    softwareBrothers: false,
-  },
   rootPath: "/admin",
   loginPath: "/admin/login",
-  assets: { globalsFromCDN: false },
   dashboard: {
     component: AdminBro.bundle("../components/dashboard"),
   },

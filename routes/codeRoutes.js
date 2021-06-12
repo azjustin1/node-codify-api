@@ -69,12 +69,15 @@ router.post("/submit", async (req, res) => {
     codeFileName: "code" + req.user.id,
   };
 
+  // This loop to create all input file of test cases
   for (const [i, testCase] of exercise.testCases.entries()) {
     const input = {
       inputContent: testCase.input,
       inputFileName: "input" + req.user.id + i,
     };
     inputs.push(input);
+
+    // This output is require if the user want to compile C/C++
     const output = "output" + req.user.id;
     outputs.push(output);
   }
@@ -113,9 +116,10 @@ router.post("/submit", async (req, res) => {
     sandBox.run(async (data) => {
       testResults = data;
       for (var i = 0; i < testResults.length; i++) {
-        // Break the loop if the code have compiler
+        // Break the loop if compile code error
         if (testResults[i].type === "error") {
-          const diff = new Date(exercise.expiredTime) - new Date(result.submitTime);
+          const diff =
+            new Date(exercise.expiredTime) - new Date(result.submitTime);
 
           if (diff < 0) {
             await Result.updateOne(
@@ -123,14 +127,12 @@ router.post("/submit", async (req, res) => {
               { isLate: true },
               { new: true }
             );
-
           } else {
             await Result.updateOne(
               { exercise: exercise, student: student },
               { isLate: false },
               { new: true }
             );
-
           }
 
           const finalResult = await Result.findOne({
@@ -143,7 +145,7 @@ router.post("/submit", async (req, res) => {
           res.send(testResults[i].output);
           break;
         }
-
+        // Continue to compare test case if compile code successfully
         testCases.testCases.forEach(async (testCase) => {
           // Pass test case
           if (
@@ -231,14 +233,12 @@ router.post("/submit", async (req, res) => {
         { isLate: true },
         { new: true }
       );
-
     } else {
       await Result.updateOne(
         { exercise: exercise, student: student },
         { isLate: false },
         { new: true }
       );
-
     }
 
     const finalResult = await Result.findOne({
